@@ -1,0 +1,20 @@
+{
+  "name": "agri-rover",
+  "version": "1.0.0",
+  "description": "Agri Rover - Autonomous Agricultural Monitoring Control Center",
+  "main": "server/index.js",
+  "scripts": {
+    "server": "node server/index.js",
+    "client": "npm run dev --prefix client",
+    "dev": "npx concurrently -n \"API-SERVER,ROVER-UI\" -c \"cyan,green\" \"npm run server\" \"npm run client\"",
+    "build": "npm run build --prefix client"
+  },
+  "keywords": ["agri-rover", "agriculture", "iot", "rover", "esp32", "robotics"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "concurrently": "^9.1.2",
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  }
+}
