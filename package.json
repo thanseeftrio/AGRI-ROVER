@@ -1,12 +1,29 @@
-﻿{
-  "name": "agribot-rover-visualizer",
+{
+  "name": "agri-rover",
   "version": "1.0.0",
-  "description": "AgriBot-X: High-Clearance Agricultural Field Rover 3D Visualizer & CAD Package",
-  "main": "index.html",
+  "description": "Agri Rover - Autonomous Agricultural Monitoring Control Center & 3D Engineering Platform",
+  "main": "server/index.js",
   "scripts": {
-    "start": "npx serve ."
+    "server": "node server/index.js",
+    "client": "npm run dev --prefix client",
+    "dev": "npx concurrently -n \"API-SERVER,ROVER-UI\" -c \"cyan,green\" \"npm run server\" \"npm run client\"",
+    "build": "npm run build --prefix client"
   },
-  "keywords": ["agribot", "robotics", "threejs", "cad", "agricultural-robot"],
-  "author": "AgriBot Team",
-  "license": "MIT"
+  "keywords": [
+    "agri-rover",
+    "agriculture",
+    "iot",
+    "rover",
+    "threejs",
+    "cad",
+    "esp32",
+    "robotics"
+  ],
+  "author": "thanseeftrio",
+  "license": "MIT",
+  "dependencies": {
+    "concurrently": "^9.1.2",
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  }
 }

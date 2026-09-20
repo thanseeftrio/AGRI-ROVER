@@ -1,0 +1,30 @@
+{
+  "rover": {
+    "status": "Online",
+    "battery": 88,
+    "voltage": 25.2,
+    "speedMps": 0.4,
+    "distanceTraveledMeters": 485,
+    "currentPlantId": "P082",
+    "currentRow": 8,
+    "plantsScannedCount": 82,
+    "totalPlants": 150,
+    "probeState": "Retracted",
+    "signalDbm": -62,
+    "gpsFix": "RTK Fixed (Centimeter accuracy)",
+    "currentLat": "12.971978",
+    "currentLng": "77.594636",
+    "activeMission": "Monitor all plants",
+    "mode": "SIMULATION"
+  },
+  "farm": {
+    "name": "Demo Farm",
+    "area": "1 Acre",
+    "crop": "Arecanut",
+    "totalPlants": 150,
+    "plantsScanned": 150,
+    "lastScan": "Today, 10:42 AM",
+    "mode": "DEMO DATA"
+  },
+  "isSimulationRunning": false
+}

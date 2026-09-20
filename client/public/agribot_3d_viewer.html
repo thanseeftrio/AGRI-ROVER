@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriBot-X: Cinematic High-Clearance Agricultural Field Rover</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: #080a0d; color: #f1f5f9; overflow: hidden; width: 100vw; height: 100vh; user-select: none; }
+        #webgl-canvas { width: 100%; height: 100%; display: block; }
+
+        /* Cinematic Top Header */
+        .header-bar {
+            position: absolute; top: 0; left: 0; width: 100%; z-index: 30;
+            padding: 16px 28px; display: flex; justify-content: space-between; align-items: center;
+            background: linear-gradient(180deg, rgba(8, 11, 16, 0.95) 0%, rgba(8, 11, 16, 0.5) 70%, transparent 100%);
+            pointer-events: none;
+        }
+        .brand-box { pointer-events: auto; display: flex; align-items: center; gap: 14px; }
+        .logo-emblem {
+            width: 44px; height: 44px; border-radius: 12px;
+            background: linear-gradient(135deg, #00d4ff, #0284c7);
+            display: flex; align-items: center; justify-content: center; font-size: 24px;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.5); border: 1px solid rgba(255,255,255,0.3);
+        }
+        .brand-text h1 { font-size: 22px; font-weight: 900; letter-spacing: 0.8px; color: #ffffff; text-shadow: 0 2px 8px rgba(0,0,0,0.8); }
+        .brand-text p { font-size: 13px; color: #38bdf8; font-weight: 600; letter-spacing: 0.3px; }
+
+        .header-right { pointer-events: auto; display: flex; gap: 10px; align-items: center; }
+        .badge-status {
+            padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px;
+            background: rgba(0, 212, 255, 0.15); border: 1px solid #00d4ff; color: #38bdf8;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.25); text-transform: uppercase;
+        }
+
+        /* Glassmorphism Left Control Drawer */
+        .control-panel {
+            position: absolute; top: 90px; left: 24px; z-index: 30;
+            width: 320px; max-height: calc(100vh - 120px); overflow-y: auto;
+            background: rgba(13, 19, 28, 0.82); backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px;
+            padding: 20px; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7);
+        }
+        .control-panel::-webkit-scrollbar { width: 4px; }
+        .control-panel::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        .section-block { margin-bottom: 20px; }
+        .section-header {
+            font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px;
+            color: #94a3b8; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 6px;
+        }
+
+        /* Sliders */
+        .slider-row { margin-bottom: 12px; }
+        .slider-meta { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; margin-bottom: 6px; }
+        .slider-meta span:last-child { color: #00d4ff; font-family: ui-monospace, monospace; }
+        input[type="range"] {
+            width: 100%; height: 6px; -webkit-appearance: none; background: #1e293b;
+            border-radius: 3px; outline: none; accent-color: #00d4ff; cursor: pointer;
+        }
+
+        /* Button Grid */
+        .action-grid { display: flex; flex-direction: column; gap: 8px; }
+        .action-btn {
+            background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f8fafc; padding: 10px 14px; border-radius: 10px; font-size: 12px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px;
+        }
+        .action-btn:hover { background: #334155; border-color: #00d4ff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 212, 255, 0.2); }
+        .action-btn.active { background: linear-gradient(135deg, #0284c7, #00d4ff); color: #031525; border-color: #00d4ff; font-weight: 700; box-shadow: 0 0 15px rgba(0, 212, 255, 0.4); }
+
+        /* Camera Views Preset Pills */
+        .cam-presets { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; }
+        .cam-pill {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+            padding: 7px 10px; border-radius: 8px; font-size: 11px; font-weight: 600; color: #94a3b8;
+            cursor: pointer; text-align: center; transition: all 0.2s;
+        }
+        .cam-pill:hover, .cam-pill.active { background: rgba(0, 212, 255, 0.15); border-color: #00d4ff; color: #38bdf8; font-weight: 700; }
+
+        /* Bottom Floating HUD */
+        .bottom-hud {
+            position: absolute; bottom: 24px; right: 24px; z-index: 30;
+            width: 360px; background: rgba(13, 19, 28, 0.85); backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px;
+            padding: 18px 22px; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7);
+        }
+        .hud-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px; }
+        .hud-header h3 { font-size: 12px; font-weight: 800; text-transform: uppercase; color: #00d4ff; letter-spacing: 1px; }
+        .hud-row { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        .hud-label { color: #94a3b8; }
+        .hud-val { font-weight: 600; font-family: ui-monospace, monospace; color: #f8fafc; }
+
+        /* Quick Hint */
+        .hint-bar {
+            position: absolute; bottom: 24px; left: 24px; z-index: 30;
+            background: rgba(13, 19, 28, 0.75); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px;
+            padding: 8px 16px; font-size: 11px; color: #94a3b8; display: flex; gap: 14px;
+        }
+    </style>
+    <!-- Three.js r128 & OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <div class="header-bar">
+        <div class="brand-box">
+            <div class="logo-emblem">⚡</div>
+            <div class="brand-text">
+                <h1>AgriRover-Agricultural Rover</h1>
+                <p>High-Clearance Strut Architecture with Top-Docked Aerial Drone</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="badge-status">● AUTONOMOUS FIELD READY</div>
+        </div>
+    </div>
+
+    <div class="control-panel">
+        <div class="section-block">
+            <div class="section-header">Camera View Presets</div>
+            <div class="cam-presets">
+                <div class="cam-pill active" id="view-hero">🎬 Hero Low-Angle</div>
+                <div class="cam-pill" id="view-front">🚗 Front View</div>
+                <div class="cam-pill" id="view-top">📐 Top Plan</div>
+                <div class="cam-pill" id="view-side">🚙 Side View</div>
+                <div class="cam-pill" id="view-drone">🛸 Drone Dock</div>
+                <div class="cam-pill" id="view-susp">⚙️ Suspension</div>
+            </div>
+        </div>
+
+        <div class="section-block">
+            <div class="section-header">Ride Height & Dynamics</div>
+            <div class="slider-row">
+                <div class="slider-meta">
+                    <span>Portal Ground Clearance</span>
+                    <span id="clearance-val">420 mm</span>
+                </div>
+                <input type="range" id="clearance-slider" min="250" max="550" value="420">
+            </div>
+            <div class="slider-row">
+                <div class="slider-meta">
+                    <span>Exploded Assembly</span>
+                    <span id="explode-val">0%</span>
+                </div>
+                <input type="range" id="explode-slider" min="0" max="100" value="0">
+            </div>
+        </div>
+
+        <div class="section-block">
+            <div class="section-header">Autonomous Mission Demos</div>
+            <div class="action-grid">
+                <button class="action-btn" id="btn-drone-flight">
+                    <span>🛸</span><span>Deploy Surveillance Drone Flight</span>
+                </button>
+                <button class="action-btn" id="btn-lights-toggle">
+                    <span>💡</span><span id="lights-label">Electric-Blue Cyber Lighting [ON]</span>
+                </button>
+                <button class="action-btn" id="btn-probe-deploy">
+                    <span>🧪</span><span>Motorized Soil Penetration</span>
+                </button>
+                <button class="action-btn" id="btn-cam-sweep">
+                    <span>📷</span><span>Turret Vision Foliage Sweep</span>
+                </button>
+                <button class="action-btn" id="btn-white-bg" style="border-color:#38bdf8;">
+                    <span>⚪</span><span id="bg-mode-label">White Studio Background [OFF]</span>
+                </button>
+                <a href="agribot_print_drawings.html" target="_blank" class="action-btn" style="text-decoration:none; background:linear-gradient(135deg, #0284c7, #00d4ff); color:#031525; font-weight:700;">
+                    <span>🖨️</span><span>Open 4-Sheet Engineering Drawings</span>
+                </a>
+                <a href="cad/AgriBot_AutoCAD_2D_Judges_Package.pdf" target="_blank" class="action-btn" style="text-decoration:none;">
+                    <span>📐</span><span>Download AutoCAD 2D PDF Package</span>
+                </a>
+                <a href="docs/ENGINEERING_SPECIFICATIONS.md" target="_blank" class="action-btn" style="text-decoration:none;">
+                    <span>📋</span><span>Engineering Specifications & BOM</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-hud">
+        <div class="hud-header">
+            <h3>Field Vehicle Diagnostics</h3>
+            <span style="color:#00d4ff; font-size:10px; font-weight:bold;">LIVE TELEMETRY</span>
+        </div>
+        <div class="hud-row"><span class="hud-label">Vehicle Architecture</span><span class="hud-val">High-Clearance Strut Portal</span></div>
+        <div class="hud-row"><span class="hud-label">Ground Clearance (Belly)</span><span class="hud-val" id="hud-clearance">420 mm (Over-Canopy)</span></div>
+        <div class="hud-row"><span class="hud-label">Track Width / Stance</span><span class="hud-val">680 mm (Wide Crop Track)</span></div>
+        <div class="hud-row"><span class="hud-label">Wheelbase</span><span class="hud-val">580 mm</span></div>
+        <div class="hud-row"><span class="hud-label">Tire Spec</span><span class="hud-val">Ø 340 mm Deep Tractor Lug</span></div>
+        <div class="hud-row"><span class="hud-label">Suspension System</span><span class="hud-val">White Helical Coilover Shocks</span></div>
+        <div class="hud-row"><span class="hud-label">Integrated Drone</span><span class="hud-val">Autonomous Canopy Quadcopter</span></div>
+        <div class="hud-row"><span class="hud-label">Vision Suite</span><span class="hud-val">Pan/Tilt Dual-Turret + IR</span></div>
+        <div class="hud-row"><span class="hud-label">Power System</span><span class="hud-val">24V 30Ah LiFePO4 Solid Core</span></div>
+    </div>
+
+    <div class="hint-bar">
+        <span>🖱️ Left Drag: Rotate View</span>
+        <span>🖱️ Right Drag: Pan</span>
+        <span>📜 Wheel: Zoom In/Out</span>
+    </div>
+
+    <canvas id="webgl-canvas"></canvas>
+
+    <script>
+        // =========================================================================
+        // 1. SCENE, RENDERER, AND CAMERA INITIALIZATION
+        // =========================================================================
+        const canvas = document.getElementById('webgl-canvas');
+        const scene = new THREE.Scene();
+        
+        // Atmospheric haze matching outdoor cinematic lighting
+        scene.background = new THREE.Color(0xd6e0e6);
+        scene.fog = new THREE.FogExp2(0xd6e0e6, 0.00035);
+
+        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 10, 20000);
+        
+        // Exact cinematic low-angle hero viewpoint matching the user's uploaded reference image
+        const HERO_CAM_POS = new THREE.Vector3(750, 280, 880);
+        const HERO_CAM_TARGET = new THREE.Vector3(0, 310, 0);
+        camera.position.copy(HERO_CAM_POS);
+
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.22;
+        renderer.outputEncoding = THREE.sRGBEncoding;
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.target.copy(HERO_CAM_TARGET);
+        controls.maxPolarAngle = Math.PI / 2 - 0.01; // Keep above soil
+        controls.minDistance = 250;
+        controls.maxDistance = 4000;
+
+        // =========================================================================
+        // 2. CINEMATIC OUTDOOR LIGHTING (SUNSET / GOLDEN FIELD)
+        // =========================================================================
+        const ambientLight = new THREE.AmbientLight(0xfff5ea, 0.75);
+        scene.add(ambientLight);
+
+        // Warm directional sunlight
+        const sunLight = new THREE.DirectionalLight(0xfff1db, 1.8);
+        sunLight.position.set(1800, 2200, 1600);
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.width = 2048;
+        sunLight.shadow.mapSize.height = 2048;
+        sunLight.shadow.camera.near = 200;
+        sunLight.shadow.camera.far = 7000;
+        sunLight.shadow.camera.left = -1600;
+        sunLight.shadow.camera.right = 1600;
+        sunLight.shadow.camera.top = 1600;
+        sunLight.shadow.camera.bottom = -1600;
+        sunLight.shadow.bias = -0.0003;
+        scene.add(sunLight);
+
+        // Sky bounce light
+        const skyBounce = new THREE.HemisphereLight(0xcde1ed, 0x47382b, 0.7);
+        skyBounce.position.set(0, 1000, 0);
+        scene.add(skyBounce);
+
+        // Soft fill from opposite side
+        const fillLight = new THREE.DirectionalLight(0x90b4ce, 0.5);
+        fillLight.position.set(-1400, 900, -1200);
+        scene.add(fillLight);
+
+        // Dynamic electric-blue front illumination from the LED light bar
+        const blueHeadlight = new THREE.PointLight(0x00d4ff, 2.5, 900);
+        blueHeadlight.position.set(380, 360, 0);
+        scene.add(blueHeadlight);
+
+        // =========================================================================
+        // 3. PROCEDURAL HIGH-RESOLUTION TEXTURES
+        // =========================================================================
+        
+        // 3.1 Organic Crumbly Agricultural Soil Texture with Tractor Furrows
+        function createSoilCanvasTexture() {
+            const c = document.createElement('canvas');
+            c.width = 1024; c.height = 1024;
+            const ctx = c.getContext('2d');
+
+            // Rich warm brown soil base
+            ctx.fillStyle = '#453223';
+            ctx.fillRect(0, 0, 1024, 1024);
+
+            // Soil clods, pebbles and organic loam particles
+            for (let i = 0; i < 5000; i++) {
+                const x = Math.random() * 1024;
+                const y = Math.random() * 1024;
+                const r = Math.random() * 7 + 1;
+                const shade = Math.random();
+                if (shade > 0.6) ctx.fillStyle = '#2b1b11'; // dark moist clod
+                else if (shade > 0.3) ctx.fillStyle = '#553d29'; // mid loam
+                else ctx.fillStyle = '#6b4f35'; // dry surface dust
+                ctx.beginPath();
+                ctx.arc(x, y, r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Distinct tractor furrow lines in crop rows
+            ctx.strokeStyle = 'rgba(26, 16, 9, 0.5)';
+            ctx.lineWidth = 45;
+            for (let x = 60; x < 1024; x += 170) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, 1024);
+                ctx.stroke();
+            }
+
+            const tex = new THREE.CanvasTexture(c);
+            tex.wrapS = THREE.RepeatWrapping;
+            tex.wrapT = THREE.RepeatWrapping;
+            tex.repeat.set(12, 12);
+            tex.anisotropy = 8;
+            return tex;
+        }
+
+        // 3.2 Realistic Broadleaf Crop Texture
+        function createLeafCanvasTexture() {
+            const c = document.createElement('canvas');
+            c.width = 256; c.height = 256;
+            const ctx = c.getContext('2d');
+
+            // Leaf green gradient
+            const g = ctx.createLinearGradient(0, 0, 256, 256);
+            g.addColorStop(0, '#4ade80');
+            g.addColorStop(0.5, '#22c55e');
+            g.addColorStop(1, '#15803d');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, 256, 256);
+
+            // Veins
+            ctx.strokeStyle = '#86efac';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(128, 0); ctx.lineTo(128, 256);
+            ctx.stroke();
+
+            ctx.lineWidth = 2;
+            for (let y = 30; y < 240; y += 30) {
+                ctx.beginPath(); ctx.moveTo(128, y); ctx.lineTo(40, y + 25); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(128, y); ctx.lineTo(216, y + 25); ctx.stroke();
+            }
+
+            const tex = new THREE.CanvasTexture(c);
+            return tex;
+        }
+
+        // 3.3 Brushed Gunmetal Hull Texture with Seam Lines
+        function createHullCanvasTexture() {
+            const c = document.createElement('canvas');
+            c.width = 512; c.height = 512;
+            const ctx = c.getContext('2d');
+
+            const g = ctx.createLinearGradient(0, 0, 512, 512);
+            g.addColorStop(0, '#cbd5e1');
+            g.addColorStop(0.5, '#94a3b8');
+            g.addColorStop(1, '#64748b');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, 512, 512);
+
+            // Subtle brushed metal streaks
+            ctx.fillStyle = 'rgba(0,0,0,0.03)';
+            for (let i = 0; i < 512; i += 2) {
+                ctx.fillRect(0, i, 512, 1);
+            }
+
+            // Beveled panel edge grooves
+            ctx.strokeStyle = 'rgba(15, 23, 42, 0.4)';
+            ctx.lineWidth = 6;
+            ctx.strokeRect(10, 10, 492, 492);
+
+            const tex = new THREE.CanvasTexture(c);
+            return tex;
+        }
+
+        // =========================================================================
+        // 4. PBR MATERIALS
+        // =========================================================================
+        const texSoil = createSoilCanvasTexture();
+        const texLeaf = createLeafCanvasTexture();
+        const texHull = createHullCanvasTexture();
+
+        const mats = {
+            soilGround: new THREE.MeshStandardMaterial({ map: texSoil, roughness: 0.95, metalness: 0.05 }),
+            cropLeaf: new THREE.MeshStandardMaterial({ map: texLeaf, roughness: 0.55, metalness: 0.1, side: THREE.DoubleSide }),
+            
+            // Rover Hull Materials matching reference image
+            upperHullSilver: new THREE.MeshStandardMaterial({ map: texHull, roughness: 0.28, metalness: 0.85 }),
+            lowerHullCharcoal: new THREE.MeshStandardMaterial({ color: 0x1a2129, roughness: 0.45, metalness: 0.75 }),
+            chassisDarkBelly: new THREE.MeshStandardMaterial({ color: 0x0f1318, roughness: 0.6, metalness: 0.5 }),
+            bullbarBlack: new THREE.MeshStandardMaterial({ color: 0x111317, roughness: 0.35, metalness: 0.8 }),
+            
+            // Glowing Cyber-Electric Blue LEDs
+            electricBlueGlow: new THREE.MeshStandardMaterial({
+                color: 0x00d4ff,
+                emissive: 0x00d4ff,
+                emissiveIntensity: 2.2,
+                roughness: 0.1
+            }),
+            
+            // Suspension & Mechanics
+            whiteShockSpring: new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.25, metalness: 0.35 }),
+            chromeDamperPiston: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.08, metalness: 0.98 }),
+            controlArmDark: new THREE.MeshStandardMaterial({ color: 0x222831, roughness: 0.4, metalness: 0.8 }),
+            
+            // Tires & Wheels
+            tractorTireRubber: new THREE.MeshStandardMaterial({ color: 0x15171a, roughness: 0.9, metalness: 0.05 }),
+            darkWheelRim: new THREE.MeshStandardMaterial({ color: 0x252a32, roughness: 0.3, metalness: 0.85 }),
+            beadlockSilver: new THREE.MeshStandardMaterial({ color: 0xcfd4dc, roughness: 0.2, metalness: 0.92 }),
+            
+            // Drone & Sensors
+            droneCarbon: new THREE.MeshStandardMaterial({ color: 0x181a1d, roughness: 0.45, metalness: 0.7 }),
+            sensorGlass: new THREE.MeshPhysicalMaterial({ color: 0x0284c7, transmission: 0.92, roughness: 0.05, transparent: true }),
+            probeTipGold: new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.95, roughness: 0.15 })
+        };
+
+        // =========================================================================
+        // 5. CROP FIELD & DISTANT HORIZON ENVIRONMENT
+        // =========================================================================
+        const envGroup = new THREE.Group();
+        scene.add(envGroup);
+
+        // Ground Plane (Large tilled agricultural field)
+        const groundGeo = new THREE.PlaneGeometry(12000, 12000);
+        const groundMesh = new THREE.Mesh(groundGeo, mats.soilGround);
+        groundMesh.rotation.x = -Math.PI / 2;
+        groundMesh.receiveShadow = true;
+        envGroup.add(groundMesh);
+
+        // Crop Rows: Broadleaf plants scattered organically along parallel furrow tracks
+        function createBushyCrop(x, z) {
+            const plant = new THREE.Group();
+            plant.position.set(x, 0, z);
+            // 7-9 lush leaves spreading in natural crown
+            const numLeaves = 8;
+            for (let i = 0; i < numLeaves; i++) {
+                const ang = (i * Math.PI * 2) / numLeaves + (Math.random() * 0.3);
+                const leafGeo = new THREE.ConeGeometry(24, 65, 7);
+                leafGeo.rotateX(Math.PI / 2.8);
+                const leaf = new THREE.Mesh(leafGeo, mats.cropLeaf);
+                leaf.position.set(Math.cos(ang) * 16, 28 + Math.random() * 8, Math.sin(ang) * 16);
+                leaf.rotation.y = ang;
+                leaf.rotation.z = Math.sin(i) * 0.2;
+                leaf.castShadow = true;
+                plant.add(leaf);
+            }
+            return plant;
+        }
+
+        // Generate 6 dense agricultural crop rows matching the image
+        const rowOffsetsZ = [-680, -450, -220, 220, 450, 680];
+        for (let rz of rowOffsetsZ) {
+            for (let rx = -1600; rx <= 1600; rx += 140) {
+                const jitterX = rx + (Math.random() * 30 - 15);
+                const jitterZ = rz + (Math.random() * 25 - 12);
+                envGroup.add(createBushyCrop(jitterX, jitterZ));
+            }
+        }
+
+        // Distant tree line on horizon
+        const treeLine = new THREE.Group();
+        for (let tx = -4000; tx <= 4000; tx += 220) {
+            const tree = new THREE.Mesh(
+                new THREE.ConeGeometry(120 + Math.random() * 60, 450 + Math.random() * 150, 6),
+                new THREE.MeshStandardMaterial({ color: 0x2e4635, roughness: 0.9 })
+            );
+            tree.position.set(tx, 200, -3200 + Math.random() * 200);
+            treeLine.add(tree);
+        }
+        envGroup.add(treeLine);
+
+        // =========================================================================
+        // 6. ROVER 3D MODELING: HIGH-CLEARANCE STRUT ARCHITECTURE
+        // =========================================================================
+        const rover = new THREE.Group();
+        scene.add(rover);
+
+        // Separate groups for ride-height control and exploded view
+        const chassisGroup = new THREE.Group();
+        const wheelsGroup = new THREE.Group();
+        const suspensionGroup = new THREE.Group();
+        const droneGroup = new THREE.Group();
+        const probeGroup = new THREE.Group();
+        const turretGroup = new THREE.Group();
+
+        rover.add(chassisGroup);
+        rover.add(wheelsGroup);
+        rover.add(suspensionGroup);
+        rover.add(droneGroup);
+        rover.add(probeGroup);
+        rover.add(turretGroup);
+
+        // Dynamic ride height parameter (default 420mm ground clearance)
+        let currentBellyY = 420;
+
+        // 6.1 FACETED CYBER HULL & MAIN CHASSIS BODY
+        const hullMeshGroup = new THREE.Group();
+        chassisGroup.add(hullMeshGroup);
+
+        // Upper Faceted Canopy (Titanium Silver / Brushed Gunmetal)
+        // Length 640mm, Width 420mm, Height 140mm with faceted chamfered geometry
+        const topCanopyGeo = new THREE.CylinderGeometry(190, 220, 110, 6);
+        topCanopyGeo.rotateY(Math.PI / 6);
+        topCanopyGeo.scale(1.45, 1.0, 0.95);
+        const topCanopy = new THREE.Mesh(topCanopyGeo, mats.upperHullSilver);
+        topCanopy.position.set(0, 80, 0);
+        topCanopy.castShadow = true;
+        hullMeshGroup.add(topCanopy);
+
+        // Mid-Hull Angular Body (Dark Gunmetal Armored Panels)
+        const midHullGeo = new THREE.BoxGeometry(660, 90, 410);
+        const midHull = new THREE.Mesh(midHullGeo, mats.lowerHullCharcoal);
+        midHull.position.set(0, 20, 0);
+        midHull.castShadow = true;
+        hullMeshGroup.add(midHull);
+
+        // Lower Tapered Belly Undercarriage (Keeps center of gravity low & clears crops)
+        const lowerBellyGeo = new THREE.CylinderGeometry(190, 140, 90, 4);
+        lowerBellyGeo.rotateY(Math.PI / 4);
+        lowerBellyGeo.scale(1.5, 1.0, 0.95);
+        const lowerBelly = new THREE.Mesh(lowerBellyGeo, mats.chassisDarkBelly);
+        lowerBelly.position.set(0, -50, 0);
+        lowerBelly.castShadow = true;
+        hullMeshGroup.add(lowerBelly);
+
+        // Continuous Electric-Blue Horizontal LED Brow Light Bar (Stretches across front)
+        const ledBrowGeo = new THREE.BoxGeometry(12, 16, 390);
+        const ledBrow = new THREE.Mesh(ledBrowGeo, mats.electricBlueGlow);
+        ledBrow.position.set(332, 58, 0);
+        hullMeshGroup.add(ledBrow);
+
+        // Two Angled Vertical Electric-Blue LED Slits on Lower Grille Cheeks
+        for (let lz of [-110, 110]) {
+            const slit = new THREE.Mesh(new THREE.BoxGeometry(10, 60, 12), mats.electricBlueGlow);
+            slit.position.set(325, -20, lz);
+            slit.rotation.z = 0.25; // angled slit
+            hullMeshGroup.add(slit);
+        }
+
+        // Lower Front Tubular Bullbar / Brush Guard
+        const bullbar = new THREE.Mesh(new THREE.CylinderGeometry(12, 12, 320, 16), mats.bullbarBlack);
+        bullbar.rotateX(Math.PI / 2);
+        bullbar.position.set(350, -45, 0);
+        bullbar.castShadow = true;
+        hullMeshGroup.add(bullbar);
+
+        // Bullbar Mounting Uprights
+        for (let bz of [-120, 120]) {
+            const bMount = new THREE.Mesh(new THREE.BoxGeometry(45, 14, 18), mats.bullbarBlack);
+            bMount.position.set(335, -45, bz);
+            hullMeshGroup.add(bMount);
+        }
+
+        // 6.2 DUAL VISION SENSOR TURRET (TOP FRONT NOSE)
+        const turretBase = new THREE.Mesh(new THREE.CylinderGeometry(35, 42, 28, 20), mats.lowerHullCharcoal);
+        turretBase.position.set(220, 150, 0);
+        turretGroup.add(turretBase);
+
+        const turretHead = new THREE.Group();
+        turretHead.position.set(220, 175, 0);
+        turretGroup.add(turretHead);
+
+        // Primary 4K Vision Camera Housing
+        const camTurret = new THREE.Mesh(new THREE.BoxGeometry(50, 40, 55), mats.upperHullSilver);
+        camTurret.castShadow = true;
+        turretHead.add(camTurret);
+
+        // Dual Optical Lenses
+        const lens1 = new THREE.Mesh(new THREE.CylinderGeometry(11, 14, 20, 16), mats.bullbarBlack);
+        lens1.rotateZ(Math.PI / 2); lens1.position.set(28, 4, -14);
+        const glass1 = new THREE.Mesh(new THREE.CircleGeometry(10, 16), mats.sensorGlass);
+        glass1.rotateY(Math.PI / 2); glass1.position.set(38.5, 4, -14);
+        
+        const lens2 = new THREE.Mesh(new THREE.CylinderGeometry(11, 14, 20, 16), mats.bullbarBlack);
+        lens2.rotateZ(Math.PI / 2); lens2.position.set(28, 4, 14);
+        const glass2 = new THREE.Mesh(new THREE.CircleGeometry(10, 16), mats.sensorGlass);
+        glass2.rotateY(Math.PI / 2); glass2.position.set(38.5, 4, 14);
+
+        turretHead.add(lens1); turretHead.add(glass1);
+        turretHead.add(lens2); turretHead.add(glass2);
+
+        // 6.3 EXPOSED HIGH-CLEARANCE SUSPENSION & WHITE COILOVER SHOCKS
+        // 4 Wheel Portal Outriggers: Front-Left, Front-Right, Rear-Left, Rear-Right
+        const suspensionLegs = [];
+        const shockSprings = [];
+
+        const legConfigs = [
+            { x: 210, z: 270, signX: 1, signZ: 1 },
+            { x: 210, z: -270, signX: 1, signZ: -1 },
+            { x: -210, z: 270, signX: -1, signZ: 1 },
+            { x: -210, z: -270, signX: -1, signZ: -1 }
+        ];
+
+        legConfigs.forEach((cfg, idx) => {
+            const leg = new THREE.Group();
+            suspensionGroup.add(leg);
+
+            // Upper Articulated Portal Arm extending outward and downward
+            const armMesh = new THREE.Mesh(new THREE.BoxGeometry(45, 35, 110), mats.controlArmDark);
+            armMesh.position.set(cfg.x * 0.85, 0, cfg.signZ * 200);
+            armMesh.rotation.x = cfg.signZ * 0.35;
+            armMesh.castShadow = true;
+            leg.add(armMesh);
+
+            // PROMINENT EXPOSED VERTICAL COILOVER SHOCK (Matches the white spring in image!)
+            const shockUnit = new THREE.Group();
+            shockUnit.position.set(cfg.x * 0.95, -60, cfg.signZ * 230);
+            leg.add(shockUnit);
+
+            // Chrome Damper Rod
+            const damperPiston = new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 170, 16), mats.chromeDamperPiston);
+            damperPiston.castShadow = true;
+            shockUnit.add(damperPiston);
+
+            // Upper and Lower Spring Retention Collars
+            const collarTop = new THREE.Mesh(new THREE.CylinderGeometry(24, 24, 14, 16), mats.bullbarBlack);
+            collarTop.position.y = 65;
+            const collarBot = new THREE.Mesh(new THREE.CylinderGeometry(24, 24, 14, 16), mats.bullbarBlack);
+            collarBot.position.y = -65;
+            shockUnit.add(collarTop);
+            shockUnit.add(collarBot);
+
+            // Genuine 3D Helical Coil Spring (White powder-coated, exactly like the image!)
+            function createHelicalSpring(radius, height, turns) {
+                const points = [];
+                const samples = turns * 36;
+                for (let i = 0; i <= samples; i++) {
+                    const t = i / samples;
+                    const ang = t * Math.PI * 2 * turns;
+                    const y = (t - 0.5) * height;
+                    points.push(new THREE.Vector3(Math.cos(ang) * radius, y, Math.sin(ang) * radius));
+                }
+                const curve = new THREE.CatmullRomCurve3(points);
+                return new THREE.TubeGeometry(curve, 120, 3.8, 8, false);
+            }
+            const springGeo = createHelicalSpring(20, 115, 8);
+            const springMesh = new THREE.Mesh(springGeo, mats.whiteShockSpring);
+            springMesh.castShadow = true;
+            shockUnit.add(springMesh);
+            shockSprings.push(springMesh);
+
+            // Steering Knuckle & Portal Gearcase
+            const portalBox = new THREE.Mesh(new THREE.BoxGeometry(60, 80, 50), mats.lowerHullCharcoal);
+            portalBox.position.set(cfg.x, -140, cfg.z);
+            portalBox.castShadow = true;
+            leg.add(portalBox);
+
+            suspensionLegs.push(leg);
+
+            // 6.4 MASSIVE ALL-TERRAIN TRACTOR TIRES (Ø 340mm)
+            const wheel = new THREE.Group();
+            wheel.position.set(cfg.x, 170, cfg.z); // Center of wheel is 170mm above ground
+
+            // Pneumatic Tire Body
+            const tireMesh = new THREE.Mesh(new THREE.CylinderGeometry(170, 170, 105, 32), mats.tractorTireRubber);
+            tireMesh.rotateX(Math.PI / 2);
+            tireMesh.castShadow = true;
+            wheel.add(tireMesh);
+
+            // 14 Deep Tractor Chevron V-Tread Lugs
+            for (let t = 0; t < 14; t++) {
+                const ang = (t * Math.PI * 2) / 14;
+                // V-Lug Left
+                const lugL = new THREE.Mesh(new THREE.BoxGeometry(22, 14, 48), mats.tractorTireRubber);
+                lugL.position.set(Math.cos(ang) * 168, Math.sin(ang) * 168, 24);
+                lugL.rotation.z = ang;
+                lugL.rotation.y = cfg.signZ * 0.42;
+                wheel.add(lugL);
+
+                // V-Lug Right
+                const lugR = new THREE.Mesh(new THREE.BoxGeometry(22, 14, 48), mats.tractorTireRubber);
+                lugR.position.set(Math.cos(ang + 0.22) * 168, Math.sin(ang + 0.22) * 168, -24);
+                lugR.rotation.z = ang + 0.22;
+                lugR.rotation.y = -cfg.signZ * 0.42;
+                wheel.add(lugR);
+            }
+
+            // Dark Graphite Rim & Outer Beadlock Ring
+            const rim = new THREE.Mesh(new THREE.CylinderGeometry(105, 105, 108, 28), mats.darkWheelRim);
+            rim.rotateX(Math.PI / 2);
+            wheel.add(rim);
+
+            const beadlock = new THREE.Mesh(new THREE.TorusGeometry(100, 7, 8, 32), mats.beadlockSilver);
+            beadlock.position.z = cfg.signZ * 54;
+            wheel.add(beadlock);
+
+            // Center Lug Nuts
+            for (let n = 0; n < 6; n++) {
+                const nutAng = (n * Math.PI * 2) / 6;
+                const nut = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 10, 6), mats.beadlockSilver);
+                nut.rotateX(Math.PI / 2);
+                nut.position.set(Math.cos(nutAng) * 52, Math.sin(nutAng) * 52, cfg.signZ * 56);
+                wheel.add(nut);
+            }
+
+            wheelsGroup.add(wheel);
+        });
+
+        // 6.5 TOP DRONE DOCKING PLATFORM & AUTONOMOUS RECHARGING
+        // Flat recessed landing nest on the top rear deck (Matches drone position in image!)
+        const dockPad = new THREE.Mesh(new THREE.BoxGeometry(380, 8, 320), mats.lowerHullCharcoal);
+        dockPad.position.set(-110, 142, 0);
+        chassisGroup.add(dockPad);
+
+        // Circular Helipad Target Ring & Charging Contacts
+        const dockRing = new THREE.Mesh(new THREE.RingGeometry(85, 95, 32), mats.electricBlueGlow);
+        dockRing.rotateX(-Math.PI / 2);
+        dockRing.position.set(-110, 147, 0);
+        chassisGroup.add(dockRing);
+
+        // 6.6 AUTONOMOUS SURVEILLANCE QUADCOPTER DRONE (DOCKED ON REAR DECK)
+        const drone = new THREE.Group();
+        drone.position.set(-110, 150, 0); // Resting on dock
+        droneGroup.add(drone);
+
+        // Carbon Fuselage Pod
+        const droneBody = new THREE.Mesh(new THREE.BoxGeometry(80, 26, 80), mats.droneCarbon);
+        droneBody.position.y = 35;
+        droneBody.castShadow = true;
+        drone.add(droneBody);
+
+        // Arched Landing Legs (Matches the distinctive curved legs in the image!)
+        for (let lz of [-55, 55]) {
+            const legCurve = new THREE.Mesh(new THREE.TorusGeometry(32, 4, 8, 24, Math.PI), mats.droneCarbon);
+            legCurve.rotateZ(Math.PI);
+            legCurve.position.set(0, 32, lz);
+            drone.add(legCurve);
+            // Foot Pad
+            const footL = new THREE.Mesh(new THREE.BoxGeometry(35, 4, 10), mats.bullbarBlack);
+            footL.position.set(-28, 4, lz);
+            const footR = new THREE.Mesh(new THREE.BoxGeometry(35, 4, 10), mats.bullbarBlack);
+            footR.position.set(28, 4, lz);
+            drone.add(footL);
+            drone.add(footR);
+        }
+
+        // 4 Carbon Arms & Spinning Propellers
+        const droneProps = [];
+        const armOffsets = [
+            { x: 75, z: 75 }, { x: 75, z: -75 },
+            { x: -75, z: 75 }, { x: -75, z: -75 }
+        ];
+
+        armOffsets.forEach(a => {
+            const armBar = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, 105, 12), mats.droneCarbon);
+            armBar.rotateZ(Math.PI / 2);
+            armBar.rotateY(Math.atan2(a.z, a.x));
+            armBar.position.set(a.x / 2, 36, a.z / 2);
+            drone.add(armBar);
+
+            // Brushless Outrunner Motor
+            const dMotor = new THREE.Mesh(new THREE.CylinderGeometry(12, 12, 16, 16), mats.bullbarBlack);
+            dMotor.position.set(a.x, 44, a.z);
+            drone.add(dMotor);
+
+            // Dual-Blade Propeller
+            const propGroup = new THREE.Group();
+            propGroup.position.set(a.x, 53, a.z);
+            const blade = new THREE.Mesh(new THREE.BoxGeometry(130, 2, 11), mats.droneCarbon);
+            blade.castShadow = true;
+            propGroup.add(blade);
+            drone.add(propGroup);
+            droneProps.push(propGroup);
+        });
+
+        // Drone Gimbal Camera under Nose
+        const dCamGimbal = new THREE.Mesh(new THREE.SphereGeometry(10, 16, 16), mats.bullbarBlack);
+        dCamGimbal.position.set(42, 22, 0);
+        const dCamLens = new THREE.Mesh(new THREE.CircleGeometry(5, 12), mats.sensorGlass);
+        dCamLens.rotateY(Math.PI / 2);
+        dCamLens.position.set(52.5, 22, 0);
+        drone.add(dCamGimbal);
+        drone.add(dCamLens);
+
+        // 6.7 MOTORIZED RETRACTABLE SOIL PROBE (UNDERCARRIAGE)
+        const probeSlide = new THREE.Group();
+        probeSlide.position.set(0, 0, 0);
+        probeGroup.add(probeSlide);
+
+        const probeRail = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 260, 12), mats.chromeDamperPiston);
+        probeRail.position.set(60, 0, 0);
+        probeSlide.add(probeRail);
+
+        const probeNeedle = new THREE.Mesh(new THREE.ConeGeometry(7, 45, 16), mats.probeTipGold);
+        probeNeedle.rotateX(Math.PI);
+        probeNeedle.position.set(60, -145, 0);
+        probeSlide.add(probeNeedle);
+
+        // Set initial positions according to default clearance (belly at Y=420)
+        function updateRideHeight(newBellyY) {
+            currentBellyY = newBellyY;
+            chassisGroup.position.y = currentBellyY;
+            droneGroup.position.y = currentBellyY;
+            turretGroup.position.y = currentBellyY;
+            probeGroup.position.y = currentBellyY;
+            suspensionGroup.position.y = currentBellyY;
+
+            document.getElementById('clearance-val').innerText = `${Math.round(currentBellyY)} mm`;
+            document.getElementById('hud-clearance').innerText = `${Math.round(currentBellyY)} mm (Over-Canopy)`;
+        }
+        updateRideHeight(420);
+
+        // =========================================================================
+        // 7. INTERACTIVE UI HANDLERS & ANIMATIONS
+        // =========================================================================
+        
+        // Ride Height Slider
+        document.getElementById('clearance-slider').addEventListener('input', (e) => {
+            updateRideHeight(parseFloat(e.target.value));
+        });
+
+        // Exploded View Slider
+        const explodeSlider = document.getElementById('explode-slider');
+        const explodeVal = document.getElementById('explode-val');
+        explodeSlider.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value) / 100;
+            explodeVal.innerText = `${Math.round(val * 100)}%`;
+
+            droneGroup.position.y = currentBellyY + val * 350;
+            turretGroup.position.y = currentBellyY + val * 160;
+            hullMeshGroup.position.y = val * 80;
+            probeGroup.position.y = currentBellyY - val * 140;
+
+            wheelsGroup.children.forEach(w => {
+                const isLeft = w.position.z > 0;
+                w.position.z = (isLeft ? 270 : -270) + (isLeft ? 1 : -1) * (val * 180);
+            });
+        });
+
+        // Camera Preset Buttons
+        function setCameraView(pos, target, activeBtnId) {
+            document.querySelectorAll('.cam-pill').forEach(p => p.classList.remove('active'));
+            document.getElementById(activeBtnId).classList.add('active');
+
+            const startPos = camera.position.clone();
+            const startTarget = controls.target.clone();
+            let progress = 0;
+
+            function tweenCam() {
+                progress += 0.04;
+                camera.position.lerpVectors(startPos, pos, progress);
+                controls.target.lerpVectors(startTarget, target, progress);
+                controls.update();
+                if (progress < 1) requestAnimationFrame(tweenCam);
+            }
+            tweenCam();
+        }
+
+        document.getElementById('view-hero').addEventListener('click', () => {
+            setCameraView(HERO_CAM_POS, HERO_CAM_TARGET, 'view-hero');
+        });
+
+        document.getElementById('view-front').addEventListener('click', () => {
+            setCameraView(new THREE.Vector3(1050, 420, 0), new THREE.Vector3(0, 420, 0), 'view-front');
+        });
+
+        document.getElementById('view-top').addEventListener('click', () => {
+            setCameraView(new THREE.Vector3(0, 1500, 0.01), new THREE.Vector3(0, 420, 0), 'view-top');
+        });
+
+        document.getElementById('view-side').addEventListener('click', () => {
+            setCameraView(new THREE.Vector3(0, 420, 1150), new THREE.Vector3(0, 420, 0), 'view-side');
+        });
+
+        document.getElementById('view-drone').addEventListener('click', () => {
+            setCameraView(new THREE.Vector3(-280, 850, 420), new THREE.Vector3(-110, 560, 0), 'view-drone');
+        });
+
+        document.getElementById('view-susp').addEventListener('click', () => {
+            setCameraView(new THREE.Vector3(450, 260, 480), new THREE.Vector3(210, 200, 270), 'view-susp');
+        });
+
+        // White Studio Background Mode for Clean Screen Printing
+        let whiteBgOn = false;
+        document.getElementById('btn-white-bg').addEventListener('click', () => {
+            whiteBgOn = !whiteBgOn;
+            if (whiteBgOn) {
+                scene.background = new THREE.Color(0xffffff);
+                scene.fog.color = new THREE.Color(0xffffff);
+                envGroup.visible = false; // Hide soil and vegetation for pure white backdrop
+                renderer.toneMappingExposure = 1.05;
+                document.getElementById('bg-mode-label').innerText = 'White Studio Background [ON]';
+            } else {
+                scene.background = new THREE.Color(0xd6e0e6);
+                scene.fog.color = new THREE.Color(0xd6e0e6);
+                envGroup.visible = true;
+                renderer.toneMappingExposure = 1.22;
+                document.getElementById('bg-mode-label').innerText = 'White Studio Background [OFF]';
+            }
+        });
+
+        // Cyber Lighting Toggle
+        let lightsOn = true;
+        document.getElementById('btn-lights-toggle').addEventListener('click', () => {
+            lightsOn = !lightsOn;
+            mats.electricBlueGlow.emissiveIntensity = lightsOn ? 2.2 : 0;
+            blueHeadlight.intensity = lightsOn ? 2.5 : 0;
+            document.getElementById('lights-label').innerText = `Electric-Blue Cyber Lighting [${lightsOn ? 'ON' : 'OFF'}]`;
+        });
+
+        // Autonomous Mission States
+        let simDroneFlight = false;
+        let droneClock = 0;
+        let simProbeCycle = false;
+        let probeClock = 0;
+        let simTurretSweep = false;
+        let turretClock = 0;
+
+        document.getElementById('btn-drone-flight').addEventListener('click', () => {
+            simDroneFlight = !simDroneFlight;
+            droneClock = 0;
+            if (!simDroneFlight) {
+                drone.position.set(-110, 150, 0);
+                drone.rotation.set(0, 0, 0);
+            }
+        });
+
+        document.getElementById('btn-probe-deploy').addEventListener('click', () => {
+            simProbeCycle = !simProbeCycle;
+            probeClock = 0;
+            if (!simProbeCycle) probeSlide.position.y = 0;
+        });
+
+        document.getElementById('btn-cam-sweep').addEventListener('click', () => {
+            simTurretSweep = !simTurretSweep;
+            turretClock = 0;
+            if (!simTurretSweep) turretHead.rotation.set(0, 0, 0);
+        });
+
+        // Window Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // =========================================================================
+        // 8. ANIMATION RENDER LOOP
+        // =========================================================================
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+            controls.update();
+
+            // 1. Drone Flight Mission Animation
+            if (simDroneFlight) {
+                droneClock += delta * 1.5;
+                droneProps.forEach(p => p.rotation.y += 0.7);
+
+                if (droneClock < 3.2) {
+                    // Vertical Ascent from Rover Dock
+                    drone.position.y = 150 + droneClock * 240;
+                    drone.position.x = -110 + Math.sin(droneClock * 2) * 50;
+                } else if (droneClock < 9.5) {
+                    // Scouting Orbit across Field & Tree Canopy
+                    const t = (droneClock - 3.2) * 1.2;
+                    drone.position.x = 200 + Math.cos(t) * 550;
+                    drone.position.z = Math.sin(t) * 550;
+                    drone.position.y = 920 + Math.sin(t * 3) * 50;
+                    drone.rotation.y = -t - Math.PI / 2;
+                    drone.rotation.z = 0.22; // Banked flight
+                } else if (droneClock < 13.5) {
+                    // Autonomous Precision Return & Landing onto Rover Dock
+                    drone.position.lerp(new THREE.Vector3(-110, 150, 0), 0.04);
+                    drone.rotation.set(0, 0, 0);
+                } else {
+                    simDroneFlight = false;
+                    drone.position.set(-110, 150, 0);
+                    drone.rotation.set(0, 0, 0);
+                }
+            }
+
+            // 2. Motorized Soil Probe Stroke Cycle
+            if (simProbeCycle) {
+                probeClock += delta * 2.2;
+                // Probe lowers into soil root zone beneath rover
+                probeSlide.position.y = -Math.sin(probeClock) * 220;
+                if (probeClock > Math.PI) {
+                    simProbeCycle = false;
+                    probeSlide.position.y = 0;
+                }
+            }
+
+            // 3. Vision Turret Sweep
+            if (simTurretSweep) {
+                turretClock += delta * 1.6;
+                turretHead.rotation.y = Math.sin(turretClock) * 0.75; // ±45° Pan
+                turretHead.rotation.z = Math.sin(turretClock * 0.5) * 0.15; // Pitch
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+    </script>
+</body>
+</html>

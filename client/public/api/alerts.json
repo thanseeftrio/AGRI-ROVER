@@ -1,0 +1,53 @@
+{
+  "alerts": [
+    {
+      "id": "ALT-101",
+      "plantId": "P113",
+      "severity": "HIGH",
+      "type": "Possible Disease",
+      "message": "Possible disease symptoms detected",
+      "time": "10:41 AM"
+    },
+    {
+      "id": "ALT-102",
+      "plantId": "P082",
+      "severity": "MEDIUM",
+      "type": "Water Stress",
+      "message": "Water stress suspected (Moisture: 24%)",
+      "time": "10:38 AM"
+    },
+    {
+      "id": "ALT-103",
+      "plantId": "P041",
+      "severity": "MEDIUM",
+      "type": "Slow Growth",
+      "message": "Slow growth detected (+1cm vs avg +5cm)",
+      "time": "10:15 AM"
+    },
+    {
+      "id": "ALT-104",
+      "plantId": "P034",
+      "severity": "HIGH",
+      "type": "Possible Disease",
+      "message": "Possible leaf spotting symptoms",
+      "time": "09:55 AM"
+    },
+    {
+      "id": "ALT-105",
+      "plantId": "P014",
+      "severity": "MEDIUM",
+      "type": "Water Stress",
+      "message": "Water stress suspected (Moisture: 25%)",
+      "time": "09:32 AM"
+    },
+    {
+      "id": "ALT-106",
+      "plantId": "P001",
+      "severity": "LOW",
+      "type": "Normal",
+      "message": "Inspection completed - Healthy",
+      "time": "09:02 AM"
+    }
+  ],
+  "count": 6
+}
