@@ -1,0 +1,12 @@
+﻿{
+  "name": "agribot-rover-visualizer",
+  "version": "1.0.0",
+  "description": "AgriBot-X: High-Clearance Agricultural Field Rover 3D Visualizer & CAD Package",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "keywords": ["agribot", "robotics", "threejs", "cad", "agricultural-robot"],
+  "author": "AgriBot Team",
+  "license": "MIT"
+}

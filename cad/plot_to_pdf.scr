@@ -1,0 +1,25 @@
+;;; AutoCAD Script: Plot Sheet 1 GA Orthographic to PDF
+FILEDIA 0
+CMDECHO 0
+-PLOT
+Yes
+Model
+AutoCAD PDF (General Documentation).pc3
+ISO_full_bleed_A4_(297.00_x_210.00_MM)
+Millimeters
+Landscape
+No
+Window
+0.0,0.0
+1400.0,950.0
+Fit
+Center
+Yes
+acad.ctb
+Yes
+As displayed
+c:/Users/DELL/Documents/antigravity/quick-pascal/cad/AgriBot_Sheet1_GA_Orthographic.pdf
+No
+Yes
+CMDECHO 1
+FILEDIA 1

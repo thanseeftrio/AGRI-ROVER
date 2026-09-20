@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriBot-X: Print-Ready Engineering Drawings (White Background)</title>
+    <style>
+        /* =========================================================================
+           PRINT & SCREEN STYLES FOR CLEAN WHITE BACKGROUND ENGINEERING DRAWINGS
+           ========================================================================= */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Segoe UI", -apple-system, Arial, sans-serif; }
+        
+        body {
+            background: #e2e8f0;
+            color: #0f172a;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Interactive Floating Print Toolbar */
+        .print-toolbar {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            border-radius: 30px;
+            padding: 8px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn-print {
+            background: #0284c7;
+            color: #ffffff;
+            border: none;
+            padding: 9px 18px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3);
+            transition: all 0.2s;
+        }
+        .btn-print:hover { background: #0369a1; transform: translateY(-1px); }
+        .nav-pill {
+            text-decoration: none;
+            color: #475569;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 14px;
+            background: #f1f5f9;
+            transition: all 0.15s;
+        }
+        .nav-pill:hover { background: #e2e8f0; color: #0f172a; }
+
+        /* Standard Engineering Drawing Sheet (A4 Landscape at 96 DPI: 1123px x 794px) */
+        .drawing-sheet {
+            width: 1123px;
+            height: 794px;
+            background: #ffffff;
+            margin-bottom: 30px;
+            padding: 24px;
+            position: relative;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            page-break-after: always;
+            overflow: hidden;
+        }
+
+        /* ISO Outer & Inner Drawing Borders */
+        .sheet-border-outer {
+            width: 100%;
+            height: 100%;
+            border: 2.5px solid #0f172a;
+            padding: 10px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        .sheet-border-inner {
+            width: 100%;
+            height: 100%;
+            border: 1.2px solid #0f172a;
+            position: relative;
+        }
+
+        /* Standard ISO Engineering Title Block */
+        .title-block {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 380px;
+            height: 110px;
+            border-top: 1.5px solid #0f172a;
+            border-left: 1.5px solid #0f172a;
+            background: #ffffff;
+            display: grid;
+            grid-template-rows: 32px 42px 36px;
+            font-size: 11px;
+        }
+        .tb-row-1 {
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            border-bottom: 1px solid #0f172a;
+            background: #f8fafc;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: 0.5px;
+        }
+        .tb-row-2 {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            border-bottom: 1px solid #0f172a;
+        }
+        .tb-title-cell {
+            padding: 4px 10px;
+            border-right: 1px solid #0f172a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .tb-title-cell .label { font-size: 8.5px; color: #64748b; font-weight: 700; text-transform: uppercase; }
+        .tb-title-cell .val { font-size: 13px; font-weight: 900; color: #0284c7; }
+        .tb-meta-cell {
+            padding: 4px 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+        }
+        .tb-row-3 {
+            display: grid;
+            grid-template-columns: 140px 100px 1fr;
+            align-items: center;
+            padding: 0 10px;
+            font-size: 9.5px;
+            color: #334155;
+            font-weight: 600;
+        }
+
+        /* Watermark & Sheet Identifier */
+        .sheet-stamp {
+            position: absolute;
+            top: 16px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sheet-stamp .badge {
+            background: #0284c7;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 4px 8px;
+            border-radius: 4px;
+            letter-spacing: 0.8px;
+        }
+        .sheet-stamp .desc { font-size: 11px; font-weight: 700; color: #475569; }
+
+        /* Notes Box */
+        .engineering-notes {
+            position: absolute;
+            bottom: 16px;
+            left: 20px;
+            width: 620px;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-size: 10px;
+            line-height: 1.45;
+            color: #334155;
+        }
+        .engineering-notes h4 {
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+
+        /* SVG Viewport */
+        .svg-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* =========================================================================
+           PRINT OPTIMIZATION RULES: CLEAN WHITE BACKGROUND, ZERO TOOLBAR
+           ========================================================================= */
+        @media print {
+            body {
+                background: #ffffff !important;
+                padding: 0 !important;
+            }
+            .print-toolbar {
+                display: none !important;
+            }
+            .drawing-sheet {
+                width: 100vw !important;
+                height: 100vh !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                page-break-after: always !important;
+            }
+            @page {
+                size: A4 landscape;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Floating Print Navigation Toolbar -->
+    <div class="print-toolbar">
+        <a href="index.html" class="btn-print" style="background:#0f172a; text-decoration:none;">
+            <span>⚡</span><span>3D Interactive Rover</span>
+        </a>
+        <button class="btn-print" onclick="window.print()">
+            <span>🖨️</span><span>Print / Save as PDF (4 Sheets)</span>
+        </button>
+        <a href="cad/AgriBot_AutoCAD_2D_Judges_Package.pdf" target="_blank" class="nav-pill" style="color:#0284c7; font-weight:700;">
+            📥 Download AutoCAD PDF
+        </a>
+        <span style="color:#cbd5e1;">|</span>
+        <a href="#sheet-front" class="nav-pill">Page 1: Front Elevation</a>
+        <a href="#sheet-top" class="nav-pill">Page 2: Top Plan</a>
+        <a href="#sheet-side" class="nav-pill">Page 3: Side Elevation</a>
+        <a href="#sheet-iso" class="nav-pill">Page 4: 3D Isometric View</a>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- SHEET 1: FRONT ELEVATION VIEW (DEDICATED FULL PAGE)                   -->
+    <!-- ===================================================================== -->
+    <div class="drawing-sheet" id="sheet-front">
+        <div class="sheet-border-outer">
+            <div class="sheet-border-inner">
+                
+                <div class="sheet-stamp">
+                    <span class="badge">DWG-01</span>
+                    <span class="desc">HIGH-CLEARANCE STRUT ROVER - FRONT ELEVATION</span>
+                </div>
+
+                <!-- High-Resolution Vector Front View SVG -->
+                <svg class="svg-canvas" viewBox="0 0 1060 720">
+                    <defs>
+                        <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                            <path d="M0,0 L0,6 L8,3 z" fill="#dc2626" />
+                        </marker>
+                        <marker id="arr-rev" markerWidth="8" markerHeight="8" refX="2" refY="3" orient="auto">
+                            <path d="M8,0 L8,6 L0,3 z" fill="#dc2626" />
+                        </marker>
+                    </defs>
+
+                    <!-- Ground Reference Baseline (Z = 0) -->
+                    <line x1="120" y1="580" x2="940" y2="580" stroke="#0f172a" stroke-width="2" />
+                    <!-- Centerline -->
+                    <line x1="530" y1="80" x2="530" y2="610" stroke="#dc2626" stroke-width="1.2" stroke-dasharray="8,4,2,4" />
+
+                    <!-- Ground Hatching (Soil Surface) -->
+                    <g stroke="#94a3b8" stroke-width="1">
+                        <line x1="140" y1="580" x2="125" y2="595" /><line x1="180" y1="580" x2="165" y2="595" />
+                        <line x1="220" y1="580" x2="205" y2="595" /><line x1="260" y1="580" x2="245" y2="595" />
+                        <line x1="780" y1="580" x2="765" y2="595" /><line x1="820" y1="580" x2="805" y2="595" />
+                        <line x1="860" y1="580" x2="845" y2="595" /><line x1="900" y1="580" x2="885" y2="595" />
+                    </g>
+                    <text x="530" y="602" font-size="11" font-weight="bold" fill="#64748b" text-anchor="middle">GROUND SOIL DATUM (Z = 0.0 MM)</text>
+
+                    <!-- Left Tractor Wheel (Ø 340mm, Width 105mm, Center at X=240, Y=430) -->
+                    <g id="front-left-wheel">
+                        <rect x="200" y="280" width="95" height="300" rx="14" fill="#f8fafc" stroke="#0f172a" stroke-width="2.5" />
+                        <!-- Deep Tractor Lugs -->
+                        <path d="M200,310 L225,325 L200,340 M200,370 L225,385 L200,400 M200,430 L225,445 L200,460 M200,490 L225,505 L200,520 M200,550 L225,565 L200,580" fill="none" stroke="#0f172a" stroke-width="2" />
+                        <!-- Rim & Outer Beadlock -->
+                        <rect x="220" y="325" width="55" height="210" rx="8" fill="#e2e8f0" stroke="#0f172a" stroke-width="1.8" />
+                        <circle cx="247" cy="430" r="24" fill="#cbd5e1" stroke="#0f172a" stroke-width="1.5" />
+                        <circle cx="247" cy="430" r="7" fill="#0f172a" />
+                    </g>
+
+                    <!-- Right Tractor Wheel -->
+                    <g id="front-right-wheel">
+                        <rect x="765" y="280" width="95" height="300" rx="14" fill="#f8fafc" stroke="#0f172a" stroke-width="2.5" />
+                        <path d="M860,310 L835,325 L860,340 M860,370 L835,385 L860,400 M860,430 L835,445 L860,460 M860,490 L835,505 L860,520 M860,550 L835,565 L860,580" fill="none" stroke="#0f172a" stroke-width="2" />
+                        <rect x="785" y="325" width="55" height="210" rx="8" fill="#e2e8f0" stroke="#0f172a" stroke-width="1.8" />
+                        <circle cx="813" cy="430" r="24" fill="#cbd5e1" stroke="#0f172a" stroke-width="1.5" />
+                        <circle cx="813" cy="430" r="7" fill="#0f172a" />
+                    </g>
+
+                    <!-- High-Clearance Elevated Monocoque Hull (Belly at Y=230, which is 350px above datum = 420mm) -->
+                    <!-- Lower Belly Undercarriage (Z = 420 to 490 mm) -->
+                    <polygon points="405,250 655,250 685,185 375,185" fill="#f1f5f9" stroke="#0f172a" stroke-width="2.5" />
+                    <!-- Lower Skid Plate (CNC 6061 Aluminum) -->
+                    <line x1="395" y1="254" x2="665" y2="254" stroke="#0284c7" stroke-width="3" />
+
+                    <!-- Mid-Hull Armored Body (Z = 490 to 570 mm) -->
+                    <polygon points="375,185 685,185 685,120 375,120" fill="#ffffff" stroke="#0f172a" stroke-width="2.5" />
+
+                    <!-- Faceted Upper Canopy (Titanium Silver Formed Shell) -->
+                    <polygon points="375,120 435,45 625,45 685,120" fill="#f8fafc" stroke="#0f172a" stroke-width="2.5" />
+                    <!-- Facet Ridge Chamfers -->
+                    <line x1="435" y1="45" x2="435" y2="120" stroke="#64748b" stroke-width="1.5" />
+                    <line x1="625" y1="45" x2="625" y2="120" stroke="#64748b" stroke-width="1.5" />
+
+                    <!-- Continuous Electric-Blue Horizontal LED Brow Bar -->
+                    <rect x="382" y="132" width="296" height="14" rx="3" fill="#0284c7" stroke="#0369a1" stroke-width="1.5" />
+                    <!-- Dual Lower Angled LED Slits -->
+                    <line x1="450" y1="195" x2="442" y2="235" stroke="#0284c7" stroke-width="4" stroke-linecap="round" />
+                    <line x1="610" y1="195" x2="618" y2="235" stroke="#0284c7" stroke-width="4" stroke-linecap="round" />
+
+                    <!-- Front Brush Guard / Bullbar -->
+                    <rect x="420" y="225" width="220" height="16" rx="8" fill="#334155" stroke="#0f172a" stroke-width="2" />
+                    <rect x="460" y="215" width="18" height="26" fill="#0f172a" />
+                    <rect x="582" y="215" width="18" height="26" fill="#0f172a" />
+
+                    <!-- Left Exposed White Coilover Shock Strut -->
+                    <g id="front-left-shock">
+                        <!-- Upper/Lower Portal Control Arms -->
+                        <polygon points="380,180 320,195 320,225 380,210" fill="#e2e8f0" stroke="#0f172a" stroke-width="2" />
+                        <polygon points="390,245 320,335 320,365 390,265" fill="#e2e8f0" stroke="#0f172a" stroke-width="2" />
+                        <!-- Damper Piston Rod -->
+                        <line x1="330" y1="170" x2="330" y2="420" stroke="#475569" stroke-width="4" />
+                        <!-- Upper/Lower Clevis Mounting Collars -->
+                        <rect x="312" y="180" width="36" height="18" rx="3" fill="#0f172a" />
+                        <rect x="312" y="380" width="36" height="18" rx="3" fill="#0f172a" />
+                        <!-- Helical White Powder-Coated Coil Springs -->
+                        <path d="M312,205 C348,212 348,222 312,230 C348,238 348,248 312,256 C348,264 348,274 312,282 C348,290 348,300 312,308 C348,316 348,326 312,334 C348,342 348,352 312,360 C348,368 348,378 312,385" fill="none" stroke="#0284c7" stroke-width="6" stroke-linecap="round" />
+                    </g>
+
+                    <!-- Right Exposed White Coilover Shock Strut -->
+                    <g id="front-right-shock">
+                        <polygon points="680,180 740,195 740,225 680,210" fill="#e2e8f0" stroke="#0f172a" stroke-width="2" />
+                        <polygon points="670,245 740,335 740,365 670,265" fill="#e2e8f0" stroke="#0f172a" stroke-width="2" />
+                        <line x1="730" y1="170" x2="730" y2="420" stroke="#475569" stroke-width="4" />
+                        <rect x="712" y="180" width="36" height="18" rx="3" fill="#0f172a" />
+                        <rect x="712" y="380" width="36" height="18" rx="3" fill="#0f172a" />
+                        <path d="M748,205 C712,212 712,222 748,230 C712,238 712,248 748,256 C712,264 712,274 748,282 C712,290 712,300 748,308 C712,316 712,326 748,334 C712,342 712,352 748,360 C712,368 712,378 748,385" fill="none" stroke="#0284c7" stroke-width="6" stroke-linecap="round" />
+                    </g>
+
+                    <!-- Top Front Vision Sensor Turret (Pan/Tilt Dual Optics) -->
+                    <rect x="502" y="20" width="56" height="28" rx="4" fill="#0f172a" />
+                    <circle cx="518" cy="34" r="7" fill="#0284c7" stroke="#ffffff" stroke-width="1.5" />
+                    <circle cx="542" cy="34" r="7" fill="#0284c7" stroke="#ffffff" stroke-width="1.5" />
+
+                    <!-- Top Rear Docked Surveillance Quadcopter (Visible above rear deck) -->
+                    <g id="drone-silhouette">
+                        <ellipse cx="530" cy="-2" rx="35" ry="12" fill="#334155" stroke="#0f172a" stroke-width="1.5" />
+                        <line x1="470" y1="-8" x2="590" y2="-8" stroke="#0f172a" stroke-width="2.5" />
+                        <ellipse cx="465" cy="-8" rx="22" ry="3" fill="#cbd5e1" stroke="#0f172a" />
+                        <ellipse cx="595" cy="-8" rx="22" ry="3" fill="#cbd5e1" stroke="#0f172a" />
+                    </g>
+
+                    <!-- Undercarriage Retractable Soil Probe (Retracted at Y=310) -->
+                    <rect x="524" y="254" width="12" height="75" fill="#475569" />
+                    <polygon points="522,329 538,329 530,350" fill="#d97706" stroke="#b45309" stroke-width="1.2" />
+
+                    <!-- ========================================================= -->
+                    <!-- ENGINEERING DIMENSION LINES (RED CAD STYLE)               -->
+                    <!-- ========================================================= -->
+
+                    <!-- 1. Overall Track Width: 680.0 mm (Outer edge of tires) -->
+                    <line x1="190" y1="545" x2="870" y2="545" stroke="#dc2626" stroke-width="1.5" marker-start="url(#arr-rev)" marker-end="url(#arr)" />
+                    <line x1="190" y1="535" x2="190" y2="580" stroke="#dc2626" stroke-width="1" />
+                    <line x1="870" y1="535" x2="870" y2="580" stroke="#dc2626" stroke-width="1" />
+                    <rect x="460" y="535" width="140" height="18" fill="#ffffff" />
+                    <text x="530" y="548" font-size="11" font-weight="bold" fill="#dc2626" text-anchor="middle">680.0 TRACK STANCE</text>
+
+                    <!-- 2. Over-Canopy Ground Clearance: 420.0 mm (Under skid plate) -->
+                    <line x1="710" y1="580" x2="710" y2="254" stroke="#dc2626" stroke-width="1.5" marker-start="url(#arr-rev)" marker-end="url(#arr)" />
+                    <line x1="660" y1="254" x2="725" y2="254" stroke="#dc2626" stroke-width="1" />
+                    <rect x="640" y="405" width="150" height="20" fill="#ffffff" />
+                    <text x="715" y="419" font-size="11" font-weight="bold" fill="#dc2626" text-anchor="middle">420.0 GROUND CLEARANCE</text>
+
+                    <!-- 3. Overall Rover Body Height: 760.0 mm -->
+                    <line x1="140" y1="580" x2="140" y2="70" stroke="#dc2626" stroke-width="1.5" marker-start="url(#arr-rev)" marker-end="url(#arr)" />
+                    <line x1="140" y1="70" x2="500" y2="70" stroke="#dc2626" stroke-width="1" />
+                    <rect x="65" y="290" width="150" height="20" fill="#ffffff" />
+                    <text x="140" y="304" font-size="11" font-weight="bold" fill="#dc2626" text-anchor="middle">760.0 ROVER HEIGHT</text>
+
+                    <!-- 4. Tire Diameter: Ø 340.0 mm -->
+                    <line x1="175" y1="580" x2="175" y2="280" stroke="#dc2626" stroke-width="1.2" marker-start="url(#arr-rev)" marker-end="url(#arr)" />
+                    <text x="165" y="435" font-size="10" font-weight="bold" fill="#dc2626" text-anchor="end">Ø 340 TIRE</text>
+
+                    <!-- Feature Leader Callouts -->
+                    <g font-size="9.5" font-weight="bold" fill="#0f172a">
+                        <!-- Turret -->
+                        <polyline points="555,75 630,45 700,45" fill="none" stroke="#475569" stroke-width="1" />
+                        <text x="705" y="48">DUAL-SENSOR VISION TURRET (4K + IR)</text>
+
+                        <!-- LED Brow -->
+                        <polyline points="675,138 730,120 780,120" fill="none" stroke="#475569" stroke-width="1" />
+                        <text x="785" y="123">CONTINUOUS ELECTRIC-BLUE LED BROW (390 MM)</text>
+
+                        <!-- Shocks -->
+                        <polyline points="330,300 280,260 210,260" fill="none" stroke="#475569" stroke-width="1" />
+                        <text x="205" y="263" text-anchor="end">WHITE COILOVER SHOCK (22 N/MM HELIX)</text>
+
+                        <!-- Probe -->
+                        <polyline points="538,340 590,360 640,360" fill="none" stroke="#475569" stroke-width="1" />
+                        <text x="645" y="363">RETRACTABLE MULTI-PARAM SOIL PROBE</text>
+                    </g>
+                </svg>
+
+                <!-- Engineering Notes -->
+                <div class="engineering-notes">
+                    <h4>Sheet 1 Notes & Tolerances (ISO 2768-m):</h4>
+                    1. Over-canopy portal strut architecture provides 420.0 mm nominal clearance to straddle crop rows.<br>
+                    2. Track width (680 mm outer) designed for standard 700 mm agricultural row spacing without root compaction.<br>
+                    3. Suspension uses 4x independent heavy-duty white coilover shocks with 110 mm active vertical travel.<br>
+                    4. Materials: Chassis Al 6061-T6 monocoque, canopy Al 5052-H32, fasteners A2-70 stainless steel.
+                </div>
+
+                <!-- Title Block -->
+                <div class="title-block">
+                    <div class="tb-row-1">AGRIBOT-X AUTONOMOUS AI FIELD ROVER</div>
+                    <div class="tb-row-2">
+                        <div class="tb-title-cell">
+                            <span class="label">DRAWING TITLE</span>
+                            <span class="val">FRONT ELEVATION VIEW</span>
+                        </div>
+                        <div class="tb-meta-cell">
+                            <div>SCALE: 1:5</div>
+                            <div>UNITS: MM</div>
+                        </div>
+                    </div>
+                    <div class="tb-row-3">
+                        <div>DWG NO: AGX-2026-01</div>
+                        <div>REV: C.02</div>
+                        <div>SHEET: 1 OF 4</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- SHEET 2: TOP PLAN VIEW (DEDICATED FULL PAGE)                          -->
+    <!-- ===================================================================== -->
+    <div class="drawing-sheet" id="sheet-top">
+        <div class="sheet-border-outer">
+            <div class="sheet-border-inner">
+                
+                <div class="sheet-stamp">
+                    <span class="badge">DWG-02</span>
+                    <span class="desc">HIGH-CLEARANCE STRUT ROVER - TOP PLAN VIEW</span>
+                </div>
+
+                <!-- High-Resolution Vector Top Plan SVG -->
+                <svg class="svg-canvas" viewBox="0 0 1060 720">
+                    <!-- Centerlines -->
+                    <line x1="80" y1="360" x2="980" y2="360" stroke="#dc2626" stroke-width="1.2" stroke-dasharray="8,4,2,4" />
+                    <line x1="530" y1="80" x2="530" y2="640" stroke="#dc2626" stroke-width="1.2" stroke-dasharray="8,4,2,4" />
+
+                    <!-- 4 Deep Tractor Tires with Outer Beadlock Rings (Ø 340mm, Width 105mm) -->
+                    <!-- Front-Left Wheel (X = 720, Y = 160) -->
+                    <g id="top-fl-wheel">
+                        <rect x="620" y="105" width="200" height="95" rx="10" fill="#f8fafc" stroke="#0f172a" stroke-width="2.2" />
+                        <!-- Tread Chevrons -->
+                        <path d="M640,105 L660,152 L640,200 M680,105 L700,152 L680,200 M720,105 L740,152 L720,200 M760,105 L780,152 L760,200 M800,105 L820,152 L800,200" fill="none" stroke="#0f172a" stroke-width="1.8" />
+                        <rect x="655" y="105" width="130" height="14" fill="#cbd5e1" stroke="#0f172a" stroke-width="1.5" />
+                    </g>
+                    <!-- Front-Right Wheel (X = 720, Y = 560) -->
+                    <g id="top-fr-wheel">
+                        <rect x="620" y="520" width="200" height="95" rx="10" fill="#f8fafc" stroke="#0f172a" stroke-width="2.2" />
+                        <path d="M640,520 L660,567 L640,615 M680,520 L700,567 L680,615 M720,520 L740,567 L720,615 M760,520 L780,567 L760,615 M800,520 L820,567 L800,615" fill="none" stroke="#0f172a" stroke-width="1.8" />
+                        <rect x="655" y="601" width="130" height="14" fill="#cbd5e1" stroke="#0f172a" stroke-width="1.5" />
+                    </g>
+                    <!-- Rear-Left Wheel (X = 340, Y = 160) -->
+                    <g id="top-rl-wheel">
+                        <rect x="240" y="105" width="200" height="95" rx="10" fill="#f8fafc" stroke="#0f172a" stroke-width="2.2" />
+                        <path d="M260,105 L280,152 L260,200 M300,105 L320,152 L300,200 M340,105 L360,152 L340,200 M380,105 L400,152 L380,200 M420,105 L440,152 L420,200" fill="none" stroke="#0f172a" stroke-width="1.8" />
+                        <rect x="275" y="105" width="130" height="14" fill="#cbd5e1" stroke="#0f172a" stroke-width="1.5" />
+                    </g>
+                    <!-- Rear-Right Wheel (X = 340, Y = 560) -->
+                    <g id="top-rr-wheel">
+                        <rect x="240" y="520" width="200" height="95" rx="10" fill="#f8fafc" stroke="#0f172a" stroke-width="2.2" />
+                        <path d="M260,520 L280,567 L260,615 M300,520 L320,567 L300,615 M340,520 L360,567 L340,615 M380,520 L400,567 L380,615 M420,520 L440,567 L420,615" fill="none" stroke="#0f172a" stroke-width="1.8" />
+                        <rect x="275" y="601" width="130" height="14" fill="#cbd5e1" stroke="#0f172a" stroke-width="1.5" />
+                    </g>
+
+                    <!-- Main Chassis Hull Silhouette (Length 750 mm, Width 440 mm) -->
+                    <polygon points="180,230 780,230 810,260 810,460 780,490 180,490 160,460 160,260" fill="#ffffff" stroke="#0f172a" stroke-width="2.8" />
+                    
+                    <!-- Faceted Upper Canopy Wings -->
+                    <polygon points="220,260 740,260 760,290 760,430 740,460 220,460 200,430 200,290" fill="#f8fafc" stroke="#64748b" stroke-width="1.8" />
+
+                    <!-- Front Nose Continuous Electric-Blue LED Light Bar -->
+                    <rect x="805" y="270" width="10" height="180" rx="2" fill="#0284c7" stroke="#0369a1" stroke-width="1.5" />
+                    <!-- Front Tubular Bullbar -->
+                    <line x1="825" y1="260" x2="825" y2="460" stroke="#0f172a" stroke-width="5" stroke-linecap="round" />
+
+                    <!-- 4 Portal Outrigger Control Arms & Shock Mounts -->
+                    <line x1="680" y1="230" x2="720" y2="185" stroke="#0f172a" stroke-width="8" />
+                    <line x1="680" y1="490" x2="720" y2="535" stroke="#0f172a" stroke-width="8" />
+                    <line x1="380" y1="230" x2="340" y2="185" stroke="#0f172a" stroke-width="8" />
+                    <line x1="380" y1="490" x2="340" y2="535" stroke="#0f172a" stroke-width="8" />
+
+                    <!-- Top Front Vision Turret -->
+                    <circle cx="730" cy="360" r="28" fill="#e2e8f0" stroke="#0f172a" stroke-width="2" />
+                    <circle cx="738" cy="348" r="8" fill="#0284c7" />
+                    <circle cx="738" cy="372" r="8" fill="#0284c7" />
+
+                    <!-- Rear Drone Docking Station Platform (380 mm x 320 mm) -->
+                    <rect x="230" y="275" width="280" height="170" rx="8" fill="#f1f5f9" stroke="#0f172a" stroke-width="2" />
+                    <!-- Helipad Target Circle & 'H' Marker -->
+                    <circle cx="370" cy="360" r="65" fill="none" stroke="#0284c7" stroke-width="3" stroke-dasharray="6,4" />
+                    <text x="370" y="378" font-size="52" font-weight="900" fill="#0284c7" text-anchor="middle" font-family="monospace">H</text>
+
+                    <!-- Docked Surveillance Quadcopter Airframe -->
+                    <g id="drone-top-view">
+                        <!-- Carbon Boom Arms -->
+                        <line x1="310" y1="300" x2="430" y2="420" stroke="#0f172a" stroke-width="3" />
+                        <line x1="310" y1="420" x2="430" y2="300" stroke="#0f172a" stroke-width="3" />
+                        <!-- Central Avionics Pod -->
+                        <rect x="345" y="338" width="50" height="44" rx="8" fill="#334155" stroke="#0f172a" stroke-width="1.5" />
+                        <!-- 4 Spinning Rotor Disks (Ø 130mm props) -->
+                        <circle cx="310" cy="300" r="32" fill="rgba(2, 132, 199, 0.15)" stroke="#0284c7" stroke-width="1" />
+                        <circle cx="430" cy="300" r="32" fill="rgba(2, 132, 199, 0.15)" stroke="#0284c7" stroke-width="1" />
+                        <circle cx="310" cy="420" r="32" fill="rgba(2, 132, 199, 0.15)" stroke="#0284c7" stroke-width="1" />
+                        <circle cx="430" cy="420" r="32" fill="rgba(2, 132, 199, 0.15)" stroke="#0284c7" stroke-width="1" />
+                    </g>
+
+                    <!-- Top Plan View Dimensions -->
+                    <!-- 1. Overall Length: 750.0 mm -->
+                    <line x1="160" y1="40" x2="825" y2="40" stroke="#dc2626" stroke-width="1.5" marker-start="url(#arr-rev)" marker-end="url(#arr)" />
+                    <line x1="160" y1="30" x2="160" y2="150" stroke="#dc2626" stroke-width="1" />
+                    <line x1="825" y1="30" x2="825" y2="150" stroke="#dc2626" stroke-width="1" />
+                    <rect x="440" y="30" width="160" height="20" fill="#ffffff" />
+                    <text x="520" y="44" font-size="12" font-weight="bold" fill="#dc2626" text-anchor="middle">750.0 OVERALL LENGTH</text>
+
+                    <!-- 2. Wheelbase: 520.0 mm -->
+                    <line x1="340" y1="85" x2="720" y2="85" stroke="#dc2626" stroke-width="1.5" marker-start="url(#arr-rev)" marker-end="url(#arr)" />
+                    <line x1="340" y1="75" x2="340" y2="140" stroke="#dc2626" stroke-width="1" />
+                    <line x1="720" y1="75" x2="720" y2="140" stroke="#dc2626" stroke-width="1" />
+                    <rect x="470" y="75" width="130" height="20" fill="#ffffff" />
+                    <text x="535" y="89" font-size="12" font-weight="bold" fill="#dc2626" text-anchor="middle">520.0 WHEELBASE</text>
+
+                    <!-- 3. Stance Width: 680.0 mm -->
+                    <line x1="900" y1="105" x2="900" y2="615" stroke="#dc2626" stroke-width="1.5" marker-start="url(#arr-rev)" marker-end="url(#arr)" />
+                    <line x1="820" y1="105" x2="915" y2="105" stroke="#dc2626" stroke-width="1" />
+                    <line x1="820" y1="615" x2="915" y2="615" stroke="#dc2626" stroke-width="1" />
+                    <rect x="830" y="350" width="140" height="20" fill="#ffffff" />
+                    <text x="900" y="364" font-size="11" font-weight="bold" fill="#dc2626" text-anchor="middle">680.0 STANCE WIDTH</text>
+
+                    <!-- Feature Leader Callouts -->
+                    <g font-size="9.5" font-weight="bold" fill="#0f172a">
+                        <polyline points="730,332 760,300 840,300" fill="none" stroke="#475569" stroke-width="1" />
+                        <text x="845" y="303">PAN/TILT DUAL-CAMERA SENSOR TURRET</text>
+
+                        <polyline points="430,300 480,250 560,250" fill="none" stroke="#475569" stroke-width="1" />
+                        <text x="565" y="253">AUTONOMOUS QUADCOPTER IN CHARGING DOCK</text>
+
+                        <polyline points="808,310 850,270 910,270" fill="none" stroke="#475569" stroke-width="1" />
+                        <text x="915" y="273">ELECTRIC-BLUE LED LIGHT BROW</text>
+
+                        <polyline points="240,150 180,120 70,120" fill="none" stroke="#475569" stroke-width="1" />
+                        <text x="75" y="115" text-anchor="start">4X Ø 340MM CHEVRON TRACTOR TIRES</text>
+                    </g>
+                </svg>
+
+                <div class="engineering-notes">
+                    <h4>Sheet 2 Notes: Drivetrain & Docking Geometry:</h4>
+                    1. 4WD independent BLDC motors (350W each, 1:20 planetary gear) provide zero-turn skid steering capability.<br>
+                    2. Drone landing platform equipped with self-centering funnel bevels and spring-loaded copper charging rails.<br>
+                    3. Dual optical sensors positioned forward of vehicle front axle for unobstructed plant foliage inspection.<br>
+                    4. Billet aluminum outer beadlock rings prevent tire de-beading under high-torque mud operations.
+                </div>
+
+                <div class="title-block">
+                    <div class="tb-row-1">AGRIBOT-X AUTONOMOUS AI FIELD ROVER</div>
+                    <div class="tb-row-2">
+                        <div class="tb-title-cell">
+                            <span class="label">DRAWING TITLE</span>
+                            <span class="val">TOP PLAN VIEW</span>
+                        </div>
+                        <div class="tb-meta-cell">
+                            <div>SCALE: 1:5</div>
+                            <div>UNITS: MM</div>
+                        </div>
+                    </div>
+                    <div class="tb-row-3">
+                        <div>DWG NO: AGX-2026-02</div>
+                        <div>REV: C.02</div>
+                        <div>SHEET: 2 OF 4</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- SHEET 3: LEFT SIDE ELEVATION VIEW (DEDICATED FULL PAGE)               -->
+    <!-- ===================================================================== -->
+    <div class="drawing-sheet" id="sheet-side">
+        <div class="sheet-border-outer">
+            <div class="sheet-border-inner">
+                
+                <div class="sheet-stamp">
+                    <span class="badge">DWG-03</span>
+                    <span class="desc">HIGH-CLEARANCE STRUT ROVER - LEFT SIDE ELEVATION</span>
+                </div>
+
+                <!-- High-Resolution Vector Side Elevation SVG -->
+                <svg class="svg-canvas" viewBox="0 0 1060 720">
+                    <!-- Side Elevation Drawing Elements (Shifted Horizontally to Clear Stamp) -->
+                    <g transform="translate(50, 0)">
+                        <line x1="40" y1="580" x2="940" y2="580" stroke="#0f172a" stroke-width="2" />
+                        <!-- Hatching -->
+                        <g stroke="#94a3b8" stroke-width="1">
+                            <line x1="60" y1="580" x2="45" y2="595" /><line x1="100" y1="580" x2="85" y2="595" />
+                            <line x1="140" y1="580" x2="125" y2="595" /><line x1="860" y1="580" x2="845" y2="595" />
+                            <line x1="900" y1="580" x2="885" y2="595" />
+                        </g>
+                        <text x="500" y="602" font-size="11" font-weight="bold" fill="#64748b" text-anchor="middle">GROUND REFERENCE DATUM (Z = 0.0 MM)</text>
+
+                        <!-- Front Wheel (X = 730, Z = 430 center) -->
+                        <circle cx="730" cy="430" r="150" fill="#f8fafc" stroke="#0f172a" stroke-width="2.5" />
+                        <circle cx="730" cy="430" r="95" fill="#e2e8f0" stroke="#0f172a" stroke-width="1.8" />
+                        <circle cx="730" cy="430" r="30" fill="#cbd5e1" stroke="#0f172a" stroke-width="1.5" />
+                        <circle cx="730" cy="430" r="8" fill="#0f172a" />
+                        <!-- Lug chevrons -->
+                        <path d="M600,430 L585,415 M620,340 L605,325 M670,300 L655,285 M730,280 L730,265 M790,300 L805,285 M840,340 L855,325 M860,430 L875,415 M840,520 L855,535 M790,560 L805,575 M730,580 L730,595 M670,560 L655,575 M620,520 L605,535" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
+
+                        <!-- Rear Wheel (X = 330, Z = 430 center) -->
+                        <circle cx="330" cy="430" r="150" fill="#f8fafc" stroke="#0f172a" stroke-width="2.5" />
+                        <circle cx="330" cy="430" r="95" fill="#e2e8f0" stroke="#0f172a" stroke-width="1.8" />
+                        <circle cx="330" cy="430" r="30" fill="#cbd5e1" stroke="#0f172a" stroke-width="1.5" />
+                        <circle cx="330" cy="430" r="8" fill="#0f172a" />
+                        <path d="M200,430 L185,415 M220,340 L205,325 M270,300 L255,285 M330,280 L330,265 M390,300 L405,285 M440,340 L455,325 M460,430 L475,415 M440,520 L455,535 M390,560 L405,575 M330,580 L330,595 M270,560 L255,575 M220,520 L205,535" stroke="#0f172a" stroke-width="3.5" stroke-linecap="round" />
+
+                        <!-- High-Clearance Cyber Chassis Silhouette (Belly at Y=230 = 420mm ground clearance) -->
+                        <polygon points="210,230 790,230 835,160 835,120 780,60 250,60 190,140 210,230" fill="#ffffff" stroke="#0f172a" stroke-width="2.8" />
+                        
+                        <!-- Skid Plate -->
+                        <line x1="220" y1="234" x2="780" y2="234" stroke="#0284c7" stroke-width="3" />
+
+                        <!-- Front Tubular Bullbar -->
+                        <circle cx="850" cy="205" r="15" fill="#334155" stroke="#0f172a" stroke-width="2" />
+                        <rect x="800" y="195" width="45" height="18" fill="#0f172a" />
+
+                        <!-- Front LED Brow Side Profile -->
+                        <polygon points="832,130 840,130 838,155 830,155" fill="#0284c7" stroke="#0369a1" stroke-width="1.2" />
+
+                        <!-- Exposed Vertical White Coilover Shocks (Front & Rear) -->
+                        <!-- Front Shock -->
+                        <g id="side-front-shock">
+                            <line x1="710" y1="160" x2="710" y2="420" stroke="#475569" stroke-width="4" />
+                            <rect x="696" y="170" width="28" height="14" fill="#0f172a" />
+                            <rect x="696" y="380" width="28" height="14" fill="#0f172a" />
+                            <path d="M696,190 C724,196 724,204 696,210 C724,216 724,224 696,230 C724,236 724,244 696,250 C724,256 724,264 696,270 C724,276 724,284 696,290 C724,296 724,304 696,310 C724,316 724,324 696,330 C724,336 724,344 696,350 C724,356 724,364 696,370" fill="none" stroke="#0284c7" stroke-width="5" stroke-linecap="round" />
+                        </g>
+                        <!-- Rear Shock -->
+                        <g id="side-rear-shock">
+                            <line x1="310" y1="160" x2="310" y2="420" stroke="#475569" stroke-width="4" />
+                            <rect x="296" y="170" width="28" height="14" fill="#0f172a" />
+                            <rect x="296" y="380" width="28" height="14" fill="#0f172a" />
+                            <path d="M296,190 C324,196 324,204 296,210 C324,216 324,224 296,230 C324,236 324,244 296,250 C324,256 324,264 296,270 C324,276 324,284 296,290 C324,296 324,304 296,310 C324,316 324,324 296,330 C324,336 324,344 296,350 C324,356 324,364 296,370" fill="none" stroke="#0284c7" stroke-width="5" stroke-linecap="round" />
+                        </g>
+
+                        <!-- Top Front Turret (Side Elevation) -->
+                        <rect x="740" y="30" width="45" height="35" rx="5" fill="#f1f5f9" stroke="#0f172a" stroke-width="2" />
+                        <rect x="785" y="40" width="14" height="16" fill="#0f172a" />
+                        <line x1="799" y1="48" x2="815" y2="48" stroke="#0284c7" stroke-width="3" />
+
+                        <!-- Top Rear Docked Quadcopter Drone Profile -->
+                        <g id="side-drone-view">
+                            <rect x="260" y="34" width="80" height="26" rx="6" fill="#334155" stroke="#0f172a" stroke-width="2" />
+                            <!-- Curved landing leg -->
+                            <path d="M280,60 C270,72 250,75 240,77" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" />
+                            <path d="M320,60 C330,72 350,75 360,77" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" />
+                            <line x1="220" y1="28" x2="380" y2="28" stroke="#cbd5e1" stroke-width="3" />
+                        </g>
+
+                        <!-- Undercarriage Soil Probe Mechanism -->
+                        <rect x="520" y="234" width="14" height="120" fill="#475569" />
+                        <polygon points="517,354 537,354 527,380" fill="#d97706" stroke="#b45309" stroke-width="1.2" />
+
+                        <!-- Dimensions -->
+                        <!-- 1. Overall Length: 750.0 mm (At Top) -->
+                        <line x1="190" y1="85" x2="850" y2="85" stroke="#dc2626" stroke-width="1.5" marker-start="url(#arr-rev)" marker-end="url(#arr)" />
+                        <line x1="190" y1="75" x2="190" y2="230" stroke="#dc2626" stroke-width="1" />
+                        <line x1="850" y1="75" x2="850" y2="230" stroke="#dc2626" stroke-width="1" />
+                        <rect x="440" y="75" width="160" height="20" fill="#ffffff" />
+                        <text x="520" y="89" font-size="12" font-weight="bold" fill="#dc2626" text-anchor="middle">750.0 OVERALL LENGTH</text>
+
+                        <!-- 2. Wheelbase: 520.0 mm (Between Axle Centers) -->
+                        <line x1="330" y1="430" x2="730" y2="430" stroke="#dc2626" stroke-width="1.5" marker-start="url(#arr-rev)" marker-end="url(#arr)" />
+                        <circle cx="330" cy="430" r="4" fill="#dc2626" />
+                        <circle cx="730" cy="430" r="4" fill="#dc2626" />
+                        <rect x="470" y="420" width="120" height="20" fill="#ffffff" />
+                        <text x="530" y="434" font-size="12" font-weight="bold" fill="#dc2626" text-anchor="middle">520.0 WHEELBASE</text>
+
+                        <!-- 3. Ground Clearance: 420.0 mm -->
+                        <line x1="570" y1="580" x2="570" y2="234" stroke="#dc2626" stroke-width="1.5" marker-start="url(#arr-rev)" marker-end="url(#arr)" />
+                        <line x1="530" y1="234" x2="585" y2="234" stroke="#dc2626" stroke-width="1" />
+                        <rect x="580" y="395" width="150" height="20" fill="#ffffff" />
+                        <text x="655" y="410" font-size="11" font-weight="bold" fill="#dc2626" text-anchor="middle">420.0 CANOPY CLEARANCE</text>
+                    </g>
+                </svg>
+
+                <div class="engineering-notes">
+                    <h4>Sheet 3 Notes: Kinematics & Soil Penetration:</h4>
+                    1. 420.0 mm over-canopy clearance ensures zero plant drag in arecanut/crop plantations.<br>
+                    2. Retractable probe driven by precision MGN15 linear rail & T8x2 lead screw (150 mm active stroke into soil).<br>
+                    3. Front brush guard absorbs direct impacts from fallen branches and uneven agricultural terrain.<br>
+                    4. Quadcopter perched in low-drag recessed bay to maintain low vehicle center of gravity.
+                </div>
+
+                <div class="title-block">
+                    <div class="tb-row-1">AGRIBOT-X AUTONOMOUS AI FIELD ROVER</div>
+                    <div class="tb-row-2">
+                        <div class="tb-title-cell">
+                            <span class="label">DRAWING TITLE</span>
+                            <span class="val">SIDE ELEVATION VIEW</span>
+                        </div>
+                        <div class="tb-meta-cell">
+                            <div>SCALE: 1:5</div>
+                            <div>UNITS: MM</div>
+                        </div>
+                    </div>
+                    <div class="tb-row-3">
+                        <div>DWG NO: AGX-2026-03</div>
+                        <div>REV: C.02</div>
+                        <div>SHEET: 3 OF 4</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- SHEET 4: 3D ISOMETRIC / HERO ASSEMBLY VIEW (DEDICATED FULL PAGE)      -->
+    <!-- ===================================================================== -->
+    <div class="drawing-sheet" id="sheet-iso">
+        <div class="sheet-border-outer">
+            <div class="sheet-border-inner">
+                
+                <div class="sheet-stamp">
+                    <span class="badge">DWG-04</span>
+                    <span class="desc">HIGH-CLEARANCE STRUT ROVER - 3D ISOMETRIC ASSEMBLY</span>
+                </div>
+
+                <!-- High-Resolution Vector 3D Isometric View SVG -->
+                <svg class="svg-canvas" viewBox="0 0 1060 720">
+                    <defs>
+                        <radialGradient id="iso-canopy" cx="40%" cy="30%" r="70%">
+                            <stop offset="0%" stop-color="#ffffff" />
+                            <stop offset="60%" stop-color="#e2e8f0" />
+                            <stop offset="100%" stop-color="#cbd5e1" />
+                        </radialGradient>
+                    </defs>
+
+                    <!-- 3D Isometric Rover Assembly Group (Scaled and Centered for Clean Print Margins) -->
+                    <g transform="translate(10, -35) scale(0.95)">
+                        <!-- Isometric Grid Reference Base Lines -->
+                        <path d="M150,560 L530,680 L910,500 L530,380 Z" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5" />
+
+                        <!-- 3D Rear-Right Tractor Wheel -->
+                        <g id="iso-wheel-rr">
+                            <ellipse cx="380" cy="420" rx="38" ry="75" fill="#f1f5f9" stroke="#0f172a" stroke-width="2.2" />
+                            <ellipse cx="380" cy="420" rx="22" ry="45" fill="#cbd5e1" stroke="#0f172a" stroke-width="1.5" />
+                        </g>
+
+                        <!-- 3D Front-Right Tractor Wheel -->
+                        <g id="iso-wheel-fr">
+                            <ellipse cx="720" cy="460" rx="42" ry="85" fill="#f1f5f9" stroke="#0f172a" stroke-width="2.2" />
+                            <ellipse cx="720" cy="460" rx="26" ry="50" fill="#cbd5e1" stroke="#0f172a" stroke-width="1.5" />
+                        </g>
+
+                        <!-- 3D Rear-Left Tractor Wheel -->
+                        <g id="iso-wheel-rl">
+                            <ellipse cx="280" cy="490" rx="44" ry="90" fill="#f1f5f9" stroke="#0f172a" stroke-width="2.2" />
+                            <ellipse cx="280" cy="490" rx="28" ry="52" fill="#cbd5e1" stroke="#0f172a" stroke-width="1.5" />
+                        </g>
+
+                        <!-- 3D Elevated Chassis Hull Monocoque -->
+                        <!-- Lower Belly (420mm Clearance) -->
+                        <polygon points="340,380 620,470 660,450 380,360" fill="#e2e8f0" stroke="#0f172a" stroke-width="2" />
+                        <!-- Mid Hull Armor -->
+                        <polygon points="320,340 600,430 680,390 400,300" fill="#334155" stroke="#0f172a" stroke-width="2.2" />
+                        <!-- Upper Faceted Canopy -->
+                        <polygon points="350,300 580,370 650,330 420,260" fill="url(#iso-canopy)" stroke="#0f172a" stroke-width="2.5" />
+                        <!-- Chamfered Canopy Left Wing -->
+                        <polygon points="320,340 350,300 580,370 550,410" fill="#cbd5e1" stroke="#0f172a" stroke-width="1.8" />
+                        <!-- Chamfered Canopy Right Wing -->
+                        <polygon points="420,260 650,330 680,370 450,300" fill="#94a3b8" stroke="#0f172a" stroke-width="1.8" />
+
+                        <!-- 3D Front Electric-Blue LED Light Bar -->
+                        <polygon points="600,426 678,386 680,396 602,436" fill="#0284c7" stroke="#0369a1" stroke-width="1.5" />
+
+                        <!-- 3D Front Tubular Bullbar -->
+                        <path d="M570,460 L690,400 L710,410 L590,470 Z" fill="#1e293b" stroke="#0f172a" stroke-width="2" />
+
+                        <!-- 3D Front-Left Tractor Wheel (Hero Foreground) -->
+                        <g id="iso-wheel-fl">
+                            <ellipse cx="580" cy="580" rx="55" ry="110" fill="#f8fafc" stroke="#0f172a" stroke-width="2.8" />
+                            <ellipse cx="580" cy="580" rx="36" ry="70" fill="#e2e8f0" stroke="#0f172a" stroke-width="2" />
+                            <ellipse cx="580" cy="580" rx="14" ry="26" fill="#cbd5e1" stroke="#0f172a" stroke-width="1.5" />
+                            <circle cx="580" cy="580" r="5" fill="#0f172a" />
+                            <!-- Tread Lugs -->
+                            <path d="M525,580 L545,595 M535,510 L555,525 M560,480 L580,495 M610,490 L630,505 M635,540 L650,555 M635,620 L650,635 M610,660 L630,675 M560,670 L580,685" stroke="#0f172a" stroke-width="3" stroke-linecap="round" />
+                        </g>
+
+                        <!-- 3D Exposed Front-Left Coilover Shock Strut (White Helical Coil Spring) -->
+                        <g id="iso-fl-shock">
+                            <!-- Portal Control Arm -->
+                            <polygon points="550,410 575,470 595,460 570,400" fill="#94a3b8" stroke="#0f172a" stroke-width="2" />
+                            <!-- Chrome Damper Rod -->
+                            <line x1="565" y1="380" x2="575" y2="520" stroke="#475569" stroke-width="5" />
+                            <!-- White Coils -->
+                            <path d="M550,405 C580,412 580,422 550,430 C580,438 580,448 550,456 C580,464 580,474 550,482 C580,490 580,500 550,508" fill="none" stroke="#0284c7" stroke-width="7" stroke-linecap="round" />
+                        </g>
+
+                        <!-- 3D Top Front Dual Vision Turret -->
+                        <g id="iso-turret">
+                            <polygon points="560,340 600,320 620,330 580,350" fill="#ffffff" stroke="#0f172a" stroke-width="2" />
+                            <circle cx="605" cy="330" r="7" fill="#0284c7" />
+                            <circle cx="590" cy="338" r="7" fill="#0284c7" />
+                        </g>
+
+                        <!-- 3D Rear Drone Docking Station & Surveillance Quadcopter -->
+                        <g id="iso-drone-dock">
+                            <polygon points="360,280 470,320 440,340 330,300" fill="#e2e8f0" stroke="#0f172a" stroke-width="1.8" />
+                            <ellipse cx="400" cy="310" rx="35" ry="18" fill="none" stroke="#0284c7" stroke-width="2" stroke-dasharray="4,3" />
+                            <!-- Quadcopter Drone -->
+                            <ellipse cx="400" cy="275" rx="24" ry="12" fill="#1e293b" stroke="#0f172a" stroke-width="2" />
+                            <line x1="360" y1="260" x2="440" y2="290" stroke="#0f172a" stroke-width="2.5" />
+                            <line x1="360" y1="290" x2="440" y2="260" stroke="#0f172a" stroke-width="2.5" />
+                            <!-- Rotors -->
+                            <ellipse cx="360" cy="260" rx="16" ry="6" fill="rgba(2,132,199,0.3)" stroke="#0284c7" />
+                            <ellipse cx="440" cy="290" rx="16" ry="6" fill="rgba(2,132,199,0.3)" stroke="#0284c7" />
+                            <ellipse cx="360" cy="290" rx="16" ry="6" fill="rgba(2,132,199,0.3)" stroke="#0284c7" />
+                            <ellipse cx="440" cy="260" rx="16" ry="6" fill="rgba(2,132,199,0.3)" stroke="#0284c7" />
+                        </g>
+
+                        <!-- Numbered Balloon Callouts (1 to 10) -->
+                        <g id="balloons" font-size="11" font-weight="bold" fill="#0f172a" text-anchor="middle">
+                            <!-- 1: Surveillance Drone -->
+                            <circle cx="400" cy="180" r="14" fill="#ffffff" stroke="#dc2626" stroke-width="2" />
+                            <text x="400" y="184">1</text>
+                            <line x1="400" y1="194" x2="400" y2="260" stroke="#dc2626" stroke-width="1.2" />
+
+                            <!-- 2: Drone Docking Station -->
+                            <circle cx="280" cy="240" r="14" fill="#ffffff" stroke="#dc2626" stroke-width="2" />
+                            <text x="280" y="244">2</text>
+                            <line x1="294" y1="242" x2="360" y2="280" stroke="#dc2626" stroke-width="1.2" />
+
+                            <!-- 3: Upper Canopy -->
+                            <circle cx="485" cy="190" r="14" fill="#ffffff" stroke="#dc2626" stroke-width="2" />
+                            <text x="485" y="194">3</text>
+                            <line x1="485" y1="204" x2="485" y2="330" stroke="#dc2626" stroke-width="1.2" />
+
+                            <!-- 4: Vision Turret -->
+                            <circle cx="680" cy="240" r="14" fill="#ffffff" stroke="#dc2626" stroke-width="2" />
+                            <text x="680" y="244">4</text>
+                            <line x1="668" y1="248" x2="615" y2="315" stroke="#dc2626" stroke-width="1.2" />
+
+                            <!-- 5: Electric-Blue Brow -->
+                            <circle cx="780" cy="340" r="14" fill="#ffffff" stroke="#dc2626" stroke-width="2" />
+                            <text x="780" y="344">5</text>
+                            <line x1="766" y1="345" x2="685" y2="390" stroke="#dc2626" stroke-width="1.2" />
+
+                            <!-- 6: Bullbar -->
+                            <circle cx="760" cy="420" r="14" fill="#ffffff" stroke="#dc2626" stroke-width="2" />
+                            <text x="760" y="424">6</text>
+                            <line x1="746" y1="420" x2="690" y2="420" stroke="#dc2626" stroke-width="1.2" />
+
+                            <!-- 7: White Coilover Shock -->
+                            <circle cx="480" cy="460" r="14" fill="#ffffff" stroke="#dc2626" stroke-width="2" />
+                            <text x="480" y="464">7</text>
+                            <line x1="494" y1="460" x2="550" y2="460" stroke="#dc2626" stroke-width="1.2" />
+
+                            <!-- 8: Tractor Wheel -->
+                            <circle cx="700" cy="620" r="14" fill="#ffffff" stroke="#dc2626" stroke-width="2" />
+                            <text x="700" y="624">8</text>
+                            <line x1="686" y1="615" x2="630" y2="590" stroke="#dc2626" stroke-width="1.2" />
+
+                            <!-- 9: High-Clearance Belly -->
+                            <circle cx="340" cy="540" r="14" fill="#ffffff" stroke="#dc2626" stroke-width="2" />
+                            <text x="340" y="544">9</text>
+                            <line x1="354" y1="535" x2="440" y2="420" stroke="#dc2626" stroke-width="1.2" />
+                        </g>
+                    </g>
+
+                    <!-- Key to Callouts Legend -->
+                    <g transform="translate(40, 40)" font-size="10.5" font-weight="700" fill="#0f172a">
+                        <rect x="0" y="0" width="220" height="175" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1" />
+                        <text x="12" y="20" font-weight="900" fill="#0284c7">ASSEMBLY CALLOUT KEY:</text>
+                        <text x="12" y="38"><tspan fill="#dc2626">1.</tspan> Surveillance Quadcopter Drone</text>
+                        <text x="12" y="54"><tspan fill="#dc2626">2.</tspan> Drone Docking & Charging Pad</text>
+                        <text x="12" y="70"><tspan fill="#dc2626">3.</tspan> Faceted Titanium Silver Canopy</text>
+                        <text x="12" y="86"><tspan fill="#dc2626">4.</tspan> Pan/Tilt Dual Vision Turret</text>
+                        <text x="12" y="102"><tspan fill="#dc2626">5.</tspan> Electric-Blue LED Light Brow</text>
+                        <text x="12" y="118"><tspan fill="#dc2626">6.</tspan> Tubular Heavy-Duty Bullbar</text>
+                        <text x="12" y="134"><tspan fill="#dc2626">7.</tspan> White Helical Coilover Shock</text>
+                        <text x="12" y="150"><tspan fill="#dc2626">8.</tspan> Ø 340mm Tractor Wheel (Chevron)</text>
+                        <text x="12" y="166"><tspan fill="#dc2626">9.</tspan> 420mm High-Clearance Belly</text>
+                    </g>
+                </svg>
+
+                <div class="engineering-notes">
+                    <h4>Sheet 4 Notes: Assembly & Quality Inspection:</h4>
+                    1. Ensure all 4 portal arm pivots are torqued to 35 N·m and thread-locked with Loctite 243.<br>
+                    2. Coilover spring preload calibrated to 15 mm initial compression for 32 kg nominal vehicle mass.<br>
+                    3. Beadlock bolts (6x M6 per wheel) torqued in star pattern to 9.5 N·m.<br>
+                    4. Check IP65 silicone gasket compression along monocoque perimeter before wet testing.
+                </div>
+
+                <div class="title-block">
+                    <div class="tb-row-1">AGRIBOT-X AUTONOMOUS AI FIELD ROVER</div>
+                    <div class="tb-row-2">
+                        <div class="tb-title-cell">
+                            <span class="label">DRAWING TITLE</span>
+                            <span class="val">3D ISOMETRIC ASSEMBLY</span>
+                        </div>
+                        <div class="tb-meta-cell">
+                            <div>SCALE: 1:5</div>
+                            <div>UNITS: MM</div>
+                        </div>
+                    </div>
+                    <div class="tb-row-3">
+                        <div>DWG NO: AGX-2026-04</div>
+                        <div>REV: C.02</div>
+                        <div>SHEET: 4 OF 4</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
